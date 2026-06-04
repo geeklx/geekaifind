@@ -50,6 +50,11 @@ fun MainGameApp(viewModel: GameViewModel) {
     val currentScreen by viewModel.currentScreen.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
 
+    // Handle system back gestures properly
+    androidx.activity.compose.BackHandler(enabled = currentScreen != GameViewModel.Screen.Home) {
+        viewModel.goBack()
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -70,15 +75,15 @@ fun MainGameApp(viewModel: GameViewModel) {
                     )
                     GameViewModel.Screen.LevelSelector -> LevelSelectorScreen(
                         viewModel = viewModel,
-                        onBack = { viewModel.navigateTo(GameViewModel.Screen.Home) }
+                        onBack = { viewModel.goBack() }
                     )
                     GameViewModel.Screen.GamePlay -> GamePlayScreen(
                         viewModel = viewModel,
-                        onBack = { viewModel.navigateTo(GameViewModel.Screen.LevelSelector) }
+                        onBack = { viewModel.goBack() }
                     )
                     GameViewModel.Screen.Info -> InfoScreen(
                         viewModel = viewModel,
-                        onBack = { viewModel.navigateTo(GameViewModel.Screen.Home) }
+                        onBack = { viewModel.goBack() }
                     )
                 }
             }
@@ -126,145 +131,154 @@ fun HomeScreen(
         label = "offset"
     )
 
-    Column(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // Upper Title Header
+        val screenHeight = maxHeight
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 40.dp)
-        ) {
-            Text(
-                text = "GeekAIFind",
-                fontSize = 42.sp,
-                fontWeight = FontWeight.Bold,
-                color = ImperialRed,
-                fontFamily = FontFamily.Serif
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "清 朝 谜 案 · 八 股 找 茬",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = CalligraphyInk.copy(alpha = 0.7f),
-                letterSpacing = 4.sp
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier
-                    .background(PalaceGold.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.Book,
-                    contentDescription = "Classic",
-                    tint = ImperialRed,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "二十关古典成语大挑战",
-                    color = ImperialRed,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-
-        // Center visual art frame with custom generated masterwork background
-        Box(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .aspectRatio(1.2f)
-                .offset(y = bannerOffset.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(3.dp, DarkWood, RoundedCornerShape(16.dp))
-                .background(SoftParchment)
-        ) {
-            // Async loading of the amazing Qing Scholar design banner
-            Image(
-                painter = painterResource(id = com.example.R.drawable.img_home_banner_1780535994180),
-                contentDescription = "Qing Dynasty imperial scroll painting",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Ink mist decorative brush gradient bottom
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.35f)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xE61E1A17))
-                        )
-                    )
-            )
-
-            Text(
-                text = "明察秋毫 · 得意洋洋",
-                color = SoftParchment,
-                fontSize = 11.sp,
-                letterSpacing = 1.sp,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(14.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-
-        // Action Buttons
-        Column(
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(bottom = 60.dp)
+            verticalArrangement = if (screenHeight > 620.dp) Arrangement.SpaceBetween else Arrangement.spacedBy(24.dp)
         ) {
-            Button(
-                onClick = onPlayClick,
-                colors = ButtonDefaults.buttonColors(containerColor = ImperialRed),
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth(0.68f)
-                    .height(52.dp)
-                    .border(2.dp, PalaceGold, RoundedCornerShape(24.dp))
+            // Upper Title Header
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(top = 24.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = "Play", tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "GeekAIFind",
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ImperialRed,
+                    fontFamily = FontFamily.Serif
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "清 朝 谜 案 · 八 股 找 茬",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = CalligraphyInk.copy(alpha = 0.7f),
+                    letterSpacing = 4.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier
+                        .background(PalaceGold.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Book,
+                        contentDescription = "Classic",
+                        tint = ImperialRed,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "开始找茬",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        text = "二十关古典成语大挑战",
+                        color = ImperialRed,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedButton(
-                onClick = onInfoClick,
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkWood),
-                border = BorderStroke(1.5.dp, DarkWood),
+            // Center visual art frame with custom generated masterwork background
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.68f)
-                    .height(50.dp)
+                    .fillMaxWidth(0.85f)
+                    .aspectRatio(1.2f)
+                    .offset(y = bannerOffset.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(3.dp, DarkWood, RoundedCornerShape(16.dp))
+                    .background(SoftParchment)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.HelpOutline, contentDescription = "Info", tint = DarkWood)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "游戏指南",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                // Async loading of the amazing Qing Scholar design banner
+                Image(
+                    painter = painterResource(id = com.example.R.drawable.img_home_banner_1780535994180),
+                    contentDescription = "Qing Dynasty imperial scroll painting",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Ink mist decorative brush gradient bottom
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.35f)
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color(0xE61E1A17))
+                            )
+                        )
+                )
+
+                Text(
+                    text = "明察秋毫 · 得意洋洋",
+                    color = SoftParchment,
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(14.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // Action Buttons
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Button(
+                    onClick = onPlayClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = ImperialRed),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.68f)
+                        .height(52.dp)
+                        .border(2.dp, PalaceGold, RoundedCornerShape(24.dp))
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.PlayArrow, contentDescription = "Play", tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "开始找茬",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = onInfoClick,
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkWood),
+                    border = BorderStroke(1.5.dp, DarkWood),
+                    modifier = Modifier
+                        .fillMaxWidth(0.68f)
+                        .height(50.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.HelpOutline, contentDescription = "Info", tint = DarkWood)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "游戏指南",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }

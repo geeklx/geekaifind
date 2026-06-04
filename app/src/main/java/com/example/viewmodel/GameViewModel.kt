@@ -75,13 +75,38 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         Info
     }
 
+    private val backStack = mutableListOf<Screen>(Screen.Home)
+
     fun navigateTo(screen: Screen) {
+        if (screen == Screen.Home) {
+            backStack.clear()
+            backStack.add(Screen.Home)
+        } else {
+            if (backStack.isEmpty() || backStack.last() != screen) {
+                backStack.add(screen)
+            }
+        }
         _currentScreen.value = screen
         if (screen == Screen.GamePlay) {
             startTimer()
         } else {
             stopTimer()
         }
+    }
+
+    fun goBack(): Boolean {
+        if (backStack.size > 1) {
+            backStack.removeAt(backStack.size - 1)
+            val prevScreen = backStack.lastOrNull() ?: Screen.Home
+            _currentScreen.value = prevScreen
+            if (prevScreen == Screen.GamePlay) {
+                startTimer()
+            } else {
+                stopTimer()
+            }
+            return true
+        }
+        return false
     }
 
     fun selectLevel(levelId: Int) {
