@@ -74,7 +74,7 @@ fun SpotTheDifferenceCanvas(
                 }
         ) {
             // 1. Draw elegant background decorations (Qing style ink mountains/rivers/scenery)
-            drawSceneryBackground(level.backgroundType, size)
+            drawSceneryBackground(level, size)
 
             // 1.5. Draw level-specific main scenic backdrop corresponding to the idiom
             drawIdiomMainScene(level.id, size, this)
@@ -129,63 +129,98 @@ private fun getBackgroundBrush(style: BackgroundStyle): Brush {
 }
 
 /**
- * Draws elegant atmospheric backdrop graphics for traditional Chinese feel
+ * Draws elegant, varied, level-specific atmospheric backdrops reflecting traditional scroll art.
  */
-private fun DrawScope.drawSceneryBackground(style: BackgroundStyle, size: Size) {
+private fun DrawScope.drawSceneryBackground(level: LevelDefinition, size: Size) {
+    val style = level.backgroundType
     val inkColor = when (style) {
-        BackgroundStyle.MIDNIGHT_INDIGO -> Color(0x33FFFFFF)
-        else -> Color(0x1F2B1E17)
+        BackgroundStyle.MIDNIGHT_INDIGO -> Color(0x44FFFFFF)
+        else -> Color(0x1C2B1E17)
     }
 
-    // Draw misty ink mountains in background
-    val mountainPath1 = Path().apply {
-        moveTo(0f, size.height * 0.8f)
-        cubicTo(
-            size.width * 0.2f, size.height * 0.5f,
-            size.width * 0.4f, size.height * 0.9f,
-            size.width * 0.6f, size.height * 0.6f
-        )
-        lineTo(size.width * 0.8f, size.height)
-        lineTo(0f, size.height)
-        close()
-    }
-    drawPath(mountainPath1, color = inkColor)
+    val w = size.width
+    val h = size.height
 
-    val mountainPath2 = Path().apply {
-        moveTo(size.width * 0.3f, size.height)
-        cubicTo(
-            size.width * 0.5f, size.height * 0.45f,
-            size.width * 0.7f, size.height * 0.85f,
-            size.width, size.height * 0.5f
-        )
-        lineTo(size.width, size.height)
-        lineTo(size.width * 0.3f, size.height)
-        close()
+    // 1. Level-specific dynamic mountain scenery styles
+    when (level.id) {
+        1, 9, 20 -> { // INK_WASH_GOLD values
+            val p = Path().apply {
+                moveTo(0f, h * 0.9f)
+                quadraticTo(w * 0.3f, h * 0.6f, w * 0.6f, h * 0.78f)
+                quadraticTo(w * 0.8f, h * 0.5f, w, h * 0.9f)
+                lineTo(w, h)
+                lineTo(0f, h)
+                close()
+            }
+            drawPath(p, color = inkColor)
+            for (i in 0..2) {
+                drawCircle(Color(0x16D4AF37), radius = 80f + i * 40f, center = Offset(w * (0.2f + i * 0.3f), h * 0.25f))
+            }
+        }
+        2, 6, 8, 11, 18 -> { // MISTY_JADE values
+            val p = Path().apply {
+                moveTo(0f, h)
+                cubicTo(w * 0.15f, h * 0.55f, w * 0.45f, h * 0.88f, w * 0.72f, h * 0.65f)
+                lineTo(w, h)
+                close()
+            }
+            drawPath(p, color = inkColor)
+            // Delicate bamboo silhouettes
+            for (i in 0..3) {
+                val bx = w * (0.05f + i * 0.08f)
+                drawLine(inkColor.copy(alpha = 0.08f), Offset(bx, h), Offset(bx + 12f, h * 0.35f), strokeWidth = 6f)
+            }
+        }
+        3, 12, 15 -> { // MIDNIGHT_INDIGO values
+            val p = Path().apply {
+                moveTo(0f, h)
+                lineTo(0f, h * 0.55f)
+                lineTo(w * 0.35f, h * 0.48f)
+                lineTo(w * 0.5f, h * 0.7f)
+                lineTo(w * 0.8f, h * 0.42f)
+                lineTo(w, h * 0.65f)
+                lineTo(w, h)
+                close()
+            }
+            drawPath(p, color = Color(0xFF0F172A).copy(alpha = 0.65f))
+            // Twinkling night sky background stars
+            for (i in 0..5) {
+                drawCircle(Color.White.copy(alpha = 0.4f), radius = 2.5f, center = Offset(w * (0.1f + i * 0.15f + (i % 2) * 0.06f), h * (0.18f + (i % 3) * 0.07f)))
+            }
+        }
+        else -> { // SCHOLAR_BROWN, IMPERIAL_RED, others
+            drawRect(Color(0x084E2C15), topLeft = Offset.Zero, size = size)
+            // Decorative window grid lines
+            for (i in 0..2) {
+                drawRect(
+                    color = inkColor,
+                    topLeft = Offset(w * (0.15f + i * 0.28f), 24f),
+                    size = Size(w * 0.12f, h * 0.4f),
+                    style = Stroke(width = 2f)
+                )
+            }
+        }
     }
-    drawPath(mountainPath2, color = inkColor.copy(alpha = inkColor.alpha * 0.7f))
 
-    // Draw solar/lunar wash in upper corner
-    val sunColor = when (style) {
-        BackgroundStyle.MIDNIGHT_INDIGO -> Color(0xFFFFF3B0).copy(alpha = 0.25f)
-        BackgroundStyle.IMPERIAL_RED -> Color(0xFFD94E34).copy(alpha = 0.15f)
-        else -> Color(0xFFE56B55).copy(alpha = 0.12f)
+    // 2. Majestic Dynamic sun/moon based on authentic level theme
+    val cellColor = when {
+        level.id == 3 || level.id == 12 || level.id == 15 -> Color(0xEEE0E1DD) // Moon
+        level.id == 20 -> Color(0xFFE56B55) // Huge rising sun
+        style == BackgroundStyle.IMPERIAL_RED -> Color(0x2CD94E34)
+        else -> Color(0x1AD94E34)
     }
-    drawCircle(
-        color = sunColor,
-        radius = size.height * 0.18f,
-        center = Offset(size.width * 0.82f, size.height * 0.25f)
-    )
+    val radius = if (level.id == 20) h * 0.32f else h * 0.18f
+    val center = if (level.id == 3 || level.id == 12) Offset(w * 0.22f, h * 0.28f) else Offset(w * 0.82f, h * 0.25f)
 
-    // Draw a subtle border inside the frame mimicking traditional scroll framing
-    val frameColor = when (style) {
-        BackgroundStyle.MIDNIGHT_INDIGO -> Color(0x3DFFFFFF)
-        else -> Color(0x277A502C)
-    }
+    drawCircle(color = cellColor, radius = radius, center = center)
+    drawCircle(color = cellColor.copy(alpha = cellColor.alpha * 0.4f), radius = radius + 12f, center = center, style = Stroke(width = 3f))
+
+    // 3. Traditional bounding border inside the scroll
     drawRect(
-        color = frameColor,
-        topLeft = Offset(8f, 8f),
-        size = Size(size.width - 16f, size.height - 16f),
-        style = Stroke(width = 2f)
+        color = if (style == BackgroundStyle.MIDNIGHT_INDIGO) Color(0x3AFFFFFF) else Color(0x1F8A623A),
+        topLeft = Offset(10f, 10f),
+        size = Size(w - 20f, h - 20f),
+        style = Stroke(width = 1.5f)
     )
 }
 
@@ -195,220 +230,152 @@ private fun DrawScope.drawSceneryBackground(style: BackgroundStyle, size: Size) 
  */
 private fun drawIdiomMainScene(levelId: Int, size: Size, drawScope: DrawScope) {
     drawScope.apply {
+        val w = size.width
+        val h = size.height
+        val inkColor = Color(0x3B2C1E17)
+        val deskColor = Color(0xAA4E2C15)
+
         when (levelId) {
             1 -> { // 走马观花
-                // Draw horse silhouette at (0.35f, 0.40f)
-                val horseBase = Offset(size.width * 0.35f, size.height * 0.40f)
-                // Draw horse torso
-                drawOval(Color(0xFF7A502C), topLeft = Offset(horseBase.x - 45f, horseBase.y + 10f), size = Size(90f, 40f))
-                // Neck & Head
-                drawLine(Color(0xFF7A502C), Offset(horseBase.x + 35f, horseBase.y + 15f), Offset(horseBase.x + 55f, horseBase.y - 15f), strokeWidth = 12f, cap = StrokeCap.Round)
-                drawOval(Color(0xFF7A502C), topLeft = Offset(horseBase.x + 48f, horseBase.y - 25f), size = Size(20f, 12f))
-                // Legs
-                drawLine(Color(0xFF7A502C), Offset(horseBase.x - 35f, horseBase.y + 40f), Offset(horseBase.x - 40f, horseBase.y + 80f), strokeWidth = 6f)
-                drawLine(Color(0xFF7A502C), Offset(horseBase.x - 15f, horseBase.y + 40f), Offset(horseBase.x - 10f, horseBase.y + 80f), strokeWidth = 6f)
-                drawLine(Color(0xFF7A502C), Offset(horseBase.x + 20f, horseBase.y + 40f), Offset(horseBase.x + 15f, horseBase.y + 80f), strokeWidth = 6f)
-                drawLine(Color(0xFF7A502C), Offset(horseBase.x + 35f, horseBase.y + 40f), Offset(horseBase.x + 40f, horseBase.y + 80f), strokeWidth = 6f)
-                // Tail
-                drawLine(Color(0xFF4E2C15), Offset(horseBase.x - 45f, horseBase.y + 15f), Offset(horseBase.x - 65f, horseBase.y + 45f), strokeWidth = 5f)
-                // Draw multiple blooming red plum blossom flowers in the background & foreground
-                for (i in 0..7) {
-                    val fx = size.width * (0.55f + i * 0.05f)
-                    val fy = size.height * (0.60f + (i % 3) * 0.06f)
-                    drawCircle(Color(0x99FF85A1), radius = 12f, center = Offset(fx, fy))
-                    drawCircle(Color(0xCCFFB3C1), radius = 7f, center = Offset(fx, fy))
-                    drawCircle(Color.White, radius = 2f, center = Offset(fx, fy))
+                // Draw majestic horse & rider
+                drawOval(Color(0xFF7A502C), Offset(w * 0.24f, h * 0.42f), Size(65f, 32f)) // body
+                drawRect(Color(0xFF422F13), Offset(w * 0.32f, h * 0.44f), Size(18f, 35f)) // legs
+                drawCircle(Color(0xFFDECBB7), 8f, Offset(w * 0.35f, h * 0.40f)) // head at hat center coords
+                // Flowering garden pathway on the right side
+                for (i in 0..5) {
+                    drawCircle(Color(0x99FF85A1), 10f, Offset(w * (0.62f + i * 0.05f), h * (0.64f + (i % 2) * 0.04f)))
                 }
             }
             2 -> { // 对牛弹琴
-                // Draw Ox grazing at (0.22f, 0.55f)
-                val oxBase = Offset(size.width * 0.22f, size.height * 0.55f)
-                drawOval(Color(0xBB5C544E), topLeft = Offset(oxBase.x - 50f, oxBase.y), size = Size(100f, 55f))
-                drawCircle(Color(0xBB5C544E), radius = 22f, center = Offset(oxBase.x - 52f, oxBase.y + 10f))
-                // Horns
-                drawArc(Color(0xFF2B1E17), startAngle = 180f, sweepAngle = 120f, useCenter = false, topLeft = Offset(oxBase.x - 70f, oxBase.y - 12f), size = Size(35f, 25f), style = Stroke(width = 4f))
-                
-                // Guqin scholar playing zither under the pine tree at (0.45f, 0.52f)
-                val scholarBase = Offset(size.width * 0.45f, size.height * 0.52f)
-                drawRoundRect(Color(0x991E3A8A), topLeft = Offset(scholarBase.x - 20f, scholarBase.y + 15f), size = Size(40f, 40f), cornerRadius = CornerRadius(10f))
-                drawCircle(Color(0xFFDECBB7), radius = 10f, center = Offset(scholarBase.x, scholarBase.y + 5f))
-                // Zither board
-                drawRoundRect(Color(0xFF5C3D2E), topLeft = Offset(scholarBase.x - 35f, scholarBase.y + 35f), size = Size(70f, 8f), cornerRadius = CornerRadius(3f))
-                drawLine(Color.White, Offset(scholarBase.x - 30f, scholarBase.y + 38f), Offset(scholarBase.x + 30f, scholarBase.y + 38f), strokeWidth = 1f)
+                // Cute grazing Cow at bottom-left close to the desk
+                drawOval(Color(0xBB5C544E), Offset(w * 0.16f, h * 0.60f), Size(75f, 42f))
+                drawCircle(Color(0xBB5C544E), 16f, Offset(w * 0.15f, h * 0.62f))
+                // Scholar desk under elegant pine tree curve
+                drawRoundRect(Color(0xAA1E3A8A), Offset(w * 0.42f, h * 0.52f), Size(30f, 30f), CornerRadius(5f)) // Scholar
+                drawLine(Color(0xFF5C3D2E), Offset(w * 0.22f, h * 0.70f), Offset(w * 0.28f, h * 0.70f), 4f) // Table for Tea Cup
+                // Gnarled old pine tree trunk curving to tree branch difference at (0.78f, 0.30f)
+                drawLine(Color(0xFF5C3D2E), Offset(w * 0.65f, h * 0.82f), Offset(w * 0.76f, h * 0.32f), 8f, cap = StrokeCap.Round)
+                drawCircle(Color(0x662E8B57), 24f, Offset(w * 0.78f, h * 0.30f))
+                // Lotus park pond boundary
+                drawArc(Color(0x1C0077B6), 0f, 360f, true, Offset(w * 0.80f, h * 0.66f), Size(w * 0.16f, h * 0.18f))
             }
             3 -> { // 掩耳盗铃
-                // Temple beam
-                val bellBase = Offset(size.width * 0.55f, size.height * 0.25f)
-                drawLine(Color(0xFF422F13), Offset(bellBase.x - 60f, bellBase.y - 45f), Offset(bellBase.x + 60f, bellBase.y - 45f), strokeWidth = 8f)
-                
-                // Thief covering his ears at (0.68f, 0.60f)
-                val thiefBase = Offset(size.width * 0.68f, size.height * 0.60f)
-                drawOval(Color(0xEE1E293B), topLeft = Offset(thiefBase.x - 25f, thiefBase.y), size = Size(50f, 70f))
-                drawCircle(Color(0xFFDECBB7), radius = 12f, center = Offset(thiefBase.x, thiefBase.y - 10f))
-                // Hands raised to ears
-                drawLine(Color(0xFFDECBB7), Offset(thiefBase.x - 30f, thiefBase.y + 5f), Offset(thiefBase.x - 12f, thiefBase.y - 10f), strokeWidth = 4f)
-                drawLine(Color(0xFFDECBB7), Offset(thiefBase.x + 30f, thiefBase.y + 5f), Offset(thiefBase.x + 12f, thiefBase.y - 10f), strokeWidth = 4f)
+                // Temple roof beam holding hanging bronze bell at (0.55f, 0.25f)
+                drawLine(Color(0xFF422F13), Offset(w * 0.45f, h * 0.24f), Offset(w * 0.65f, h * 0.24f), 6f)
+                // Thief crouching at (0.68f, 0.60f)
+                drawOval(Color(0xEE1E293B), Offset(w * 0.65f, h * 0.56f), Size(32f, 48f))
+                drawCircle(Color(0xFFDECBB7), 10f, Offset(w * 0.68f, h * 0.60f)) // Head matching Hat coordinate
+                // Courtyard ground level
+                drawLine(inkColor, Offset(0f, h * 0.81f), Offset(w, h * 0.81f), 2f)
             }
             4 -> { // 纸上谈兵
-                // Desk surfaces
-                drawRoundRect(Color(0xCC4E2C15), topLeft = Offset(size.width * 0.15f, size.height * 0.55f), size = Size(size.width * 0.7f, size.height * 0.35f), cornerRadius = CornerRadius(8f))
-                // Scroll piles
-                drawRoundRect(Color(0xCCDECBB7), topLeft = Offset(size.width * 0.18f, size.height * 0.45f), size = Size(35f, 30f), cornerRadius = CornerRadius(4f))
-                drawLine(Color(0xFF8B0000), Offset(size.width * 0.18f + 6f, size.height * 0.45f), Offset(size.width * 0.18f + 6f, size.height * 0.45f + 30f), strokeWidth = 3f)
-                drawLine(Color(0xFF8B0000), Offset(size.width * 0.18f + 18f, size.height * 0.45f), Offset(size.width * 0.18f + 18f, size.height * 0.45f + 30f), strokeWidth = 3f)
+                // Large tactics war-desk
+                drawRoundRect(deskColor, Offset(w * 0.2f, h * 0.52f), Size(w * 0.6f, h * 0.36f), CornerRadius(8f))
+                drawLine(inkColor, Offset(w * 0.18f, h * 0.1f), Offset(w * 0.18f, h * 0.45f), 2f) // window frame
             }
             5 -> { // 名落孙山
-                // Bulletin Board frame
-                drawRect(Color(0xFF5C3D2E), topLeft = Offset(size.width * 0.35f, size.height * 0.15f), size = Size(size.width * 0.3f, size.height * 0.40f), style = Stroke(width = 6f))
-                drawRect(Color(0xFFFFF0EC), topLeft = Offset(size.width * 0.36f, size.height * 0.17f), size = Size(size.width * 0.28f, size.height * 0.36f))
-                drawCircle(Color(0x33D94E34), radius = 25f, center = Offset(size.width * 0.5f, size.height * 0.35f))
-                
-                // Disappointed scholar bottom-left
-                val scholarBack = Offset(size.width * 0.28f, size.height * 0.72f)
-                drawOval(Color(0xAA0284C7), topLeft = Offset(scholarBack.x - 20f, scholarBack.y + 10f), size = Size(40f, 50f))
-                drawCircle(Color(0xFFDECBB7), radius = 9f, center = Offset(scholarBack.x, scholarBack.y + 2f))
+                // Imperial list wall
+                drawRect(Color(0xFF5C3D2E), Offset(w * 0.40f, h * 0.18f), Size(w * 0.2f, h * 0.35f), style = Stroke(width = 4f))
+                drawRect(Color(0xFFFFF0EC), Offset(w * 0.41f, h * 0.20f), Size(w * 0.18f, h * 0.31f))
+                drawOval(Color(0xAA0284C7), Offset(w * 0.24f, h * 0.68f), Size(32f, 42f)) // Sad Scholar
             }
             6 -> { // 铁杵磨针
                 // Grinding rock
-                drawRoundRect(Color(0xFF707070), topLeft = Offset(size.width * 0.35f, size.height * 0.62f), size = Size(90f, 50f), cornerRadius = CornerRadius(12f))
-                
-                // Old woman grinding pestle
-                val oldWoman = Offset(size.width * 0.48f, size.height * 0.50f)
-                drawOval(Color(0xDD7C2D12), topLeft = Offset(oldWoman.x - 25f, oldWoman.y + 10f), size = Size(50f, 45f))
-                drawCircle(Color(0xFFDECBB7), radius = 9f, center = Offset(oldWoman.x, oldWoman.y + 2f))
-                drawLine(Color.LightGray, Offset(oldWoman.x - 22f, oldWoman.y + 25f), Offset(oldWoman.x + 8f, oldWoman.y + 35f), strokeWidth = 4f)
+                drawRoundRect(Color(0xFF707070), Offset(w * 0.42f, h * 0.60f), Size(70f, 40f), CornerRadius(10f))
+                // Old lady grinding pestle at (0.48f, 0.50f)
+                drawCircle(Color(0xFFDECBB7), 8f, Offset(w * 0.48f, h * 0.50f))
+                drawOval(Color(0xDD7C2D12), Offset(w * 0.45f, h * 0.53f), Size(35f, 35f))
+                // Refreshing mountain pool
+                drawArc(Color(0x220077B6), 0f, 360f, true, Offset(w * 0.12f, h * 0.70f), Size(w * 0.25f, h * 0.15f))
             }
             7 -> { // 叶公好龙
-                // Majestic coiling Golden Dragon silhouette in the scroll background
-                val dragonPath = Path().apply {
-                    moveTo(size.width * 0.1f, size.height * 0.8f)
-                    quadraticTo(size.width * 0.3f, size.height * 0.4f, size.width * 0.5f, size.height * 0.7f)
-                    quadraticTo(size.width * 0.7f, size.height * 0.9f, size.width * 0.9f, size.height * 0.4f)
+                val p = Path().apply {
+                    moveTo(w * 0.1f, h * 0.75f)
+                    quadraticTo(w * 0.4f, h * 0.35f, w * 0.58f, h * 0.35f)
+                    quadraticTo(w * 0.7f, h * 0.35f, w * 0.85f, h * 0.65f)
                 }
-                drawPath(dragonPath, color = Color(0x44D4AF37), style = Stroke(width = 32f, cap = StrokeCap.Round))
-                drawPath(dragonPath, color = Color(0x22FFFFFF), style = Stroke(width = 16f, cap = StrokeCap.Round))
+                drawPath(p, Color(0x25D4AF37), style = Stroke(width = 24f, cap = StrokeCap.Round))
+                // Elegant incense burner table
+                drawRoundRect(deskColor, Offset(w * 0.18f, h * 0.60f), Size(70f, 25f), CornerRadius(4f))
             }
             8 -> { // 井底之蛙
-                // Large circular well stone border
-                drawCircle(
-                    color = Color(0xFF383A3F),
-                    radius = size.height * 0.42f,
-                    center = Offset(size.width * 0.5f, size.height * 0.5f),
-                    style = Stroke(width = 30f)
-                )
-                // Ivy climbing
-                drawArc(Color(0xFF4F772D), startAngle = 45f, sweepAngle = 90f, useCenter = false, topLeft = Offset(size.width * 0.3f, size.height * 0.15f), size = Size(size.width * 0.4f, size.height * 0.7f), style = Stroke(width = 6f))
+                // Circular deep well stone wall border
+                drawCircle(Color(0xFF333333), h * 0.40f, Offset(w * 0.5f, h * 0.5f), style = Stroke(width = 24f))
+                drawCircle(Color(0x884F772D), 14f, Offset(w * 0.15f, h * 0.45f)) // Green moss
             }
             9 -> { // 画龙点睛
-                val muralPath = Path().apply {
-                    moveTo(size.width * 0.2f, size.height * 0.3f)
-                    cubicTo(size.width * 0.4f, size.height * 0.1f, size.width * 0.6f, size.height * 0.5f, size.width * 0.8f, size.height * 0.2f)
-                }
-                drawPath(muralPath, color = Color(0x55B22222), style = Stroke(width = 16f, cap = StrokeCap.Round))
-                
-                // Painter reaching to mural
-                val painterPt = Offset(size.width * 0.78f, size.height * 0.60f)
-                drawOval(Color(0xAA1E293B), topLeft = Offset(painterPt.x - 18f, painterPt.y + 10f), size = Size(36f, 45f))
-                drawCircle(Color(0xFFDECBB7), radius = 9f, center = Offset(painterPt.x, painterPt.y + 2f))
-                drawLine(Color(0xFF5C3D2E), Offset(painterPt.x - 15f, painterPt.y + 15f), Offset(painterPt.x - 38f, size.height * 0.35f), strokeWidth = 3f)
+                // Master hall murals
+                drawRoundRect(Color(0xFFF1E4C3), Offset(w * 0.25f, h * 0.20f), Size(w * 0.5f, h * 0.38f), CornerRadius(4f))
+                drawRoundRect(Color(0xFF8B0000), Offset(w * 0.25f, h * 0.20f), Size(w * 0.5f, h * 0.38f), CornerRadius(4f), style = Stroke(width = 2f))
+                // Painter standing at right
+                drawOval(Color(0xAA1E293B), Offset(w * 0.74f, h * 0.58f), Size(28f, 40f))
+                drawCircle(Color(0xFFDECBB7), 7f, Offset(w * 0.78f, h * 0.60f)) // Scholar head
             }
             10 -> { // 守株待兔
                 // Thick rustic tree trunk
-                val trunkPath = Path().apply {
-                    moveTo(size.width * 0.4f, 0f)
-                    lineTo(size.width * 0.45f, 0f)
-                    lineTo(size.width * 0.35f, size.height)
-                    lineTo(size.width * 0.22f, size.height)
-                    close()
-                }
-                drawPath(trunkPath, color = Color(0xFF6B4E3D))
-                // Tree branch
-                drawLine(Color(0xFF6B4E3D), Offset(size.width * 0.38f, size.height * 0.4f), Offset(size.width * 0.15f, size.height * 0.25f), strokeWidth = 22f, cap = StrokeCap.Round)
+                drawLine(Color(0xFF6B4E3D), Offset(w * 0.28f, h * 0.22f), Offset(w * 0.28f, h * 0.9f), 12f)
+                drawCircle(Color(0xFF4F772D), 18f, Offset(w * 0.28f, h * 0.22f)) // foliage
+                drawOval(Color(0xAA735D49), Offset(w * 0.56f, h * 0.68f), Size(38f, 30f)) // sleeping peasant
             }
             11 -> { // 刻舟求剑
-                // Water ripples in the lower bottom
-                for (i in 0..5) {
-                    drawArc(Color(0x550077B6), startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(i * size.width * 0.18f - 20f, size.height * 0.72f), size = Size(size.width * 0.22f, 30f), style = Stroke(width = 3f))
-                }
-                // Wooden boat boat shape
-                val boatBase = Offset(size.width * 0.50f, size.height * 0.58f)
-                val boatPath = Path().apply {
-                    moveTo(boatBase.x - 70f, boatBase.y)
-                    lineTo(boatBase.x + 70f, boatBase.y)
-                    quadraticTo(boatBase.x + 50f, boatBase.y + 25f, boatBase.x, boatBase.y + 25f)
-                    quadraticTo(boatBase.x - 50f, boatBase.y + 25f, boatBase.x - 70f, boatBase.y)
-                    close()
-                }
-                drawPath(boatPath, color = Color(0xDD8A623A))
+                // Elegant wooden boat shape centered at (0.50f, 0.58f)
+                drawOval(Color(0xDD8A623A), Offset(w * 0.35f, h * 0.54f), Size(110f, 25f))
+                drawLine(Color(0x330077B6), Offset(0f, h * 0.75f), Offset(w, h * 0.75f), 3f) // water level
             }
             12 -> { // 闻鸡起舞
-                // Full moon
-                drawCircle(Color(0x99FFF3B0), radius = size.height * 0.26f, center = Offset(size.width * 0.3f, size.height * 0.35f))
-                // Swordsman silhouette
-                val fencer = Offset(size.width * 0.44f, size.height * 0.68f)
-                drawOval(Color(0xEE1E293B), topLeft = Offset(fencer.x - 20f, fencer.y + 10f), size = Size(40f, 50f))
-                drawCircle(Color(0xFFDECBB7), radius = 10f, center = Offset(fencer.x, fencer.y + 2f))
-                drawLine(Color.LightGray, Offset(fencer.x + 10f, fencer.y + 25f), Offset(fencer.x + 55f, fencer.y + 5f), strokeWidth = 3f, cap = StrokeCap.Round)
+                drawLine(Color.Gray, Offset(0f, h * 0.78f), Offset(w, h * 0.78f), 2f) // terrace path
+                drawOval(Color(0xEE1E293B), Offset(w * 0.41f, h * 0.64f), Size(25f, 40f)) // swordsman
+                drawCircle(Color(0xFFDECBB7), 8f, Offset(w * 0.44f, h * 0.68f)) // head at coords
             }
             13 -> { // 完璧归赵
-                // Podium where jade disk sits
-                drawRoundRect(Color(0xFF8B0000), topLeft = Offset(size.width * 0.40f, size.height * 0.55f), size = Size(size.width * 0.2f, size.height * 0.3f), cornerRadius = CornerRadius(10f))
-                drawRoundRect(Color(0xFFD4AF37), topLeft = Offset(size.width * 0.40f, size.height * 0.55f), size = Size(size.width * 0.2f, size.height * 0.3f), cornerRadius = CornerRadius(10f), style = Stroke(width = 3.5f))
-                // Throne screen
-                drawRect(Color(0x225C3D2E), topLeft = Offset(size.width * 0.2f, size.height * 0.15f), size = Size(size.width * 0.6f, size.height * 0.40f))
+                // Golden throne center podium
+                drawRoundRect(Color(0xFF8B0000), Offset(w * 0.38f, h * 0.52f), Size(100f, 40f), CornerRadius(6f))
+                drawRoundRect(Color(0xFFD4AF37), Offset(w * 0.38f, h * 0.52f), Size(100f, 40f), CornerRadius(6f), style = Stroke(width = 2f))
+                drawOval(Color(0xCC1E293B), Offset(w * 0.68f, h * 0.58f), Size(28f, 45f)) // minister
             }
             14 -> { // 自相矛盾
-                // Draw crossed spear and shield silhouettes in back
-                drawLine(Color(0xFF5C544E), Offset(size.width * 0.2f, size.height * 0.2f), Offset(size.width * 0.8f, size.height * 0.8f), strokeWidth = 5f)
-                drawLine(Color(0xFF5C544E), Offset(size.width * 0.8f, size.height * 0.2f), Offset(size.width * 0.2f, size.height * 0.8f), strokeWidth = 5f)
+                // Crossed antique weapon structures
+                drawLine(Color(0xFF5C544E), Offset(w * 0.3f, h * 0.25f), Offset(w * 0.7f, h * 0.75f), 4f)
+                drawCircle(Color(0xFFDECBB7), 8f, Offset(w * 0.82f, h * 0.68f)) // spectator head
             }
             15 -> { // 四面楚歌
-                // Camp tent
-                val tentPath = Path().apply {
-                    moveTo(size.width * 0.5f, size.height * 0.3f)
-                    lineTo(size.width * 0.72f, size.height * 0.75f)
-                    lineTo(size.width * 0.28f, size.height * 0.75f)
+                // Military tents structures on ground
+                val path = Path().apply {
+                    moveTo(w * 0.45f, h * 0.4f)
+                    lineTo(w * 0.6f, h * 0.75f)
+                    lineTo(w * 0.3f, h * 0.75f)
                     close()
                 }
-                drawPath(tentPath, color = Color(0xCC374151))
-                drawLine(Color.DarkGray, Offset(size.width * 0.5f, size.height * 0.25f), Offset(size.width * 0.5f, size.height * 0.75f), strokeWidth = 4f)
+                drawPath(path, Color(0xCC374151))
             }
             16 -> { // 画饼充饥
-                // Stand tripod/easel
-                drawLine(Color(0xFF4E2C15), Offset(size.width * 0.52f, size.height * 0.3f), Offset(size.width * 0.42f, size.height * 0.85f), 5f)
-                drawLine(Color(0xFF4E2C15), Offset(size.width * 0.52f, size.height * 0.3f), Offset(size.width * 0.62f, size.height * 0.85f), 5f)
-                // Easel drawing board
-                drawRoundRect(Color(0xEEF5F0E6), topLeft = Offset(size.width * 0.40f, size.height * 0.32f), size = Size(size.width * 0.24f, size.height * 0.35f), cornerRadius = CornerRadius(5f))
-                drawRoundRect(Color(0xFF4E2C15), topLeft = Offset(size.width * 0.40f, size.height * 0.32f), size = Size(size.width * 0.24f, size.height * 0.35f), cornerRadius = CornerRadius(5f), style = Stroke(width = 3f))
+                // Stand easel holding drawing board at (0.52f, 0.48f)
+                drawRoundRect(Color(0xEEF5F0E6), Offset(w * 0.42f, h * 0.34f), Size(90f, 65f), CornerRadius(4f))
+                drawRoundRect(Color(0xFF4E2C15), Offset(w * 0.42f, h * 0.34f), Size(90f, 65f), CornerRadius(4f), style = Stroke(width = 2f))
+                drawCircle(Color(0xFFDECBB7), 7f, Offset(w * 0.70f, h * 0.60f)) // painter head
             }
             17 -> { // 名列前茅
-                // Red flags on sides
-                drawRect(Color(0x66B22222), topLeft = Offset(20f, 30f), size = Size(60f, size.height * 0.45f))
-                drawLine(Color.DarkGray, Offset(80f, 10f), Offset(80f, size.height - 20f), strokeWidth = 4f)
-                drawRect(Color(0x66B22222), topLeft = Offset(size.width - 80f, 30f), size = Size(60f, size.height * 0.45f))
-                drawLine(Color.DarkGray, Offset(size.width - 80f, 10f), Offset(size.width - 80f, size.height - 20f), strokeWidth = 4f)
+                drawLine(Color.DarkGray, Offset(w * 0.15f, h * 0.2f), Offset(w * 0.15f, h * 0.85f), 3f) // flagpole
+                drawRect(Color(0x55B22222), Offset(w * 0.05f, h * 0.25f), Size(60f, 45f)) // flag banner
             }
             18 -> { // 柳暗花明
-                // Stone arch bridge
-                val bridgePath = Path().apply {
-                    moveTo(size.width * 0.2f, size.height * 0.8f)
-                    cubicTo(size.width * 0.4f, size.height * 0.45f, size.width * 0.6f, size.height * 0.45f, size.width * 0.8f, size.height * 0.8f)
+                // Splendid arch stone bridge over river
+                val p = Path().apply {
+                    moveTo(w * 0.2f, h * 0.82f)
+                    quadraticTo(w * 0.45f, h * 0.52f, w * 0.7f, h * 0.82f)
                 }
-                drawPath(bridgePath, color = Color(0xBB866141), style = Stroke(width = 16f))
+                drawPath(p, Color(0xBB866141), style = Stroke(width = 12f))
             }
             19 -> { // 大智若愚
-                // Wooden book grid background
-                drawRect(Color(0x224E2C15), topLeft = Offset(size.width * 0.15f, 20f), size = Size(size.width * 0.7f, size.height - 40f))
-                drawLine(Color(0x224E2C15), Offset(size.width * 0.15f, size.height * 0.5f), Offset(size.width * 0.85f, size.height * 0.5f), 4f)
-                drawLine(Color(0x224E2C15), Offset(size.width * 0.5f, 20f), Offset(size.width * 0.5f, size.height - 20f), 4f)
+                // Cozy scholar library lattice bookcase grid lines back
+                drawRect(Color(0x224E2C15), Offset(w * 0.15f, 20f), Size(w * 0.7f, h - 40f))
+                drawLine(Color(0x224E2C15), Offset(w * 0.15f, h * 0.5f), Offset(w * 0.85f, h * 0.5f), 3f)
             }
             20 -> { // 一鸣惊人
-                // Rising sun spokes
-                for (i in 0..5) {
-                    val angle = i * Math.PI / 5 + Math.PI / 10
-                    val rx = size.width * 0.5f + cos(angle).toFloat() * 200f
-                    val ry = size.height * 0.5f - sin(angle).toFloat() * 150f
-                    drawLine(Color(0x44FCA311), Offset(size.width * 0.5f, size.height * 0.5f), Offset(rx, ry), strokeWidth = 3f)
+                // Sunset mountain ridge rays
+                for (i in 0..4) {
+                    val angle = i * Math.PI / 4 + Math.PI / 8
+                    drawLine(Color(0x33FCA311), Offset(w * 0.5f, h * 0.5f), Offset(w * 0.5f + cos(angle).toFloat() * 150f, h * 0.5f - sin(angle).toFloat() * 100f), 3f)
                 }
             }
         }
@@ -438,7 +405,6 @@ private fun DrawScope.drawScrollBadge(level: LevelDefinition, size: Size, isModi
     )
 
     // Paint indicator of which image is it (原图 Original vs 找茬 Modified)
-    val textIndicator = if (isModified) "變" else "本" // Classic glyph placeholders
     val indicatorColor = if (isModified) Color(0xFFB22222) else Color(0xFF2E8B57)
 
     drawCircle(
@@ -457,7 +423,7 @@ private fun DrawScope.drawScrollBadge(level: LevelDefinition, size: Size, isModi
 }
 
 /**
- * Draws the specific spot-the-difference element procedurally!
+ * Draws the specific spot-the-difference element procedurally and cleanly!
  */
 private fun DrawScope.drawDifferenceItem(
     type: DifferenceType,
@@ -466,111 +432,40 @@ private fun DrawScope.drawDifferenceItem(
     isSolved: Boolean,
     drawScope: DrawScope
 ) {
-    // Note: If solving, we usually make them identical (or show original on both for clarity, or draw original state).
-    // Let's implement original vs modified draw mechanics!
     val showModifiedState = isModifiedImage && !isSolved
 
     when (type) {
         DifferenceType.QING_OFFICIAL_HAT -> {
-            // Draw a Qing dynasty imperial hat
             val darkBlue = Color(0xFF14213D)
             val crimsonRed = Color(0xFF9E2A2B)
             val brightGold = Color(0xFFFCA311)
-
-            // Hat base
-            drawArc(
-                color = darkBlue,
-                startAngle = 180f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(center.x - 24f, center.y - 12f),
-                size = Size(48f, 24f)
-            )
-
-            // Hat rim
-            drawOval(
-                color = darkBlue,
-                topLeft = Offset(center.x - 30f, center.y + 6f),
-                size = Size(60f, 10f)
-            )
-
-            // Red tassel dome atop
-            drawArc(
-                color = crimsonRed,
-                startAngle = 180f,
-                sweepAngle = 180f,
-                useCenter = true,
-                topLeft = Offset(center.x - 12f, center.y - 16f),
-                size = Size(24f, 12f)
-            )
-
-            // Golden topper bead
+            // Hat base caps
+            drawArc(darkBlue, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(center.x - 24f, center.y - 12f), size = Size(48f, 24f))
+            drawOval(darkBlue, topLeft = Offset(center.x - 30f, center.y + 6f), size = Size(60f, 10f))
+            drawArc(crimsonRed, startAngle = 180f, sweepAngle = 180f, useCenter = true, topLeft = Offset(center.x - 12f, center.y - 16f), size = Size(24f, 12f))
             drawCircle(color = brightGold, radius = 5f, center = Offset(center.x, center.y - 17f))
 
             if (!showModifiedState) {
-                // Original: Peacock Feather Plume dangling out (Green stick with a beautiful circle tail)
-                val featherGreen = Color(0xFF1B4332)
-                drawLine(
-                    color = featherGreen,
-                    start = Offset(center.x, center.y - 15f),
-                    end = Offset(center.x + 28f, center.y - 6f),
-                    strokeWidth = 3f,
-                    cap = StrokeCap.Round
-                )
-                drawCircle(
-                    color = Color(0xFF40916C),
-                    radius = 4f,
-                    center = Offset(center.x + 28f, center.y - 6f)
-                )
-                drawCircle(
-                    color = Color(0xFF52B788),
-                    radius = 2f,
-                    center = Offset(center.x + 28f, center.y - 6f)
-                )
+                // Original: Peacock Feather Plume dangles to the right
+                drawLine(Color(0xFF1B4332), Offset(center.x, center.y - 15f), Offset(center.x + 28f, center.y - 6f), strokeWidth = 3f, cap = StrokeCap.Round)
+                drawCircle(Color(0xFF40916C), radius = 4f, center = Offset(center.x + 28f, center.y - 6f))
             } else {
-                // Modified: Peacock Feather is MISSING or is short blue bead!
-                val alteredBlue = Color(0xFF00B4D8)
-                drawLine(
-                    color = alteredBlue,
-                    start = Offset(center.x, center.y - 15f),
-                    end = Offset(center.x + 12f, center.y - 12f),
-                    strokeWidth = 3f,
-                    cap = StrokeCap.Round
-                )
+                // Modified: Peacock Feather is shortened or missing
+                drawLine(Color(0xFF00B4D8), Offset(center.x, center.y - 15f), Offset(center.x + 10f, center.y - 14f), strokeWidth = 3f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.PALACE_LANTERN -> {
-            // Draw classical red hanging lantern
             val frameColor = Color(0xFF4E2C15)
             val clothColor = Color(0xFFD90429)
-            val tasselColor = Color(0xFFFFB703)
-
-            // Hanging rope
-            drawLine(
-                color = frameColor,
-                start = Offset(center.x, center.y - 30f),
-                end = Offset(center.x, center.y - 16f),
-                strokeWidth = 2f
-            )
-
-            // If Original (lighted): Draw a beautiful gentle neon glow in background!
+            // Rope and base support frames
+            drawLine(frameColor, Offset(center.x, center.y - 30f), Offset(center.x, center.y - 16f), strokeWidth = 2f)
             if (!showModifiedState) {
-                drawCircle(
-                    color = Color(0xFFFFEA70).copy(alpha = 0.5f),
-                    radius = 28f,
-                    center = center
-                )
+                drawCircle(Color(0xFFFFEA70).copy(alpha = 0.5f), radius = 28f, center = center) // Glowing!
             } else {
-                // Darkened background for unlit lantern
-                drawCircle(
-                    color = Color(0x33000000),
-                    radius = 24f,
-                    center = center
-                )
+                drawCircle(Color(0x33000000), radius = 24f, center = center) // Dark/Dull unlit
             }
-
-            // Hexagonal red lantern body
+            // Traditional hexagonal body shape path
             val bodyPath = Path().apply {
                 moveTo(center.x - 8f, center.y - 16f)
                 lineTo(center.x + 8f, center.y - 16f)
@@ -580,217 +475,90 @@ private fun DrawScope.drawDifferenceItem(
                 lineTo(center.x - 16f, center.y)
                 close()
             }
-            drawPath(
-                color = if (!showModifiedState) clothColor else Color(0xFF8B2635),
-                path = bodyPath
-            )
+            drawPath(color = if (!showModifiedState) clothColor else Color(0xFF8B2635), path = bodyPath)
+            drawLine(frameColor, Offset(center.x - 10f, center.y - 16f), Offset(center.x + 10f, center.y - 16f), strokeWidth = 3f)
+            drawLine(frameColor, Offset(center.x - 10f, center.y + 16f), Offset(center.x + 10f, center.y + 16f), strokeWidth = 3f)
 
-            // Wooden cap/bottom frames
-            drawLine(
-                color = frameColor,
-                start = Offset(center.x - 10f, center.y - 16f),
-                end = Offset(center.x + 10f, center.y - 16f),
-                strokeWidth = 3f
-            )
-            drawLine(
-                color = frameColor,
-                start = Offset(center.x - 10f, center.y + 16f),
-                end = Offset(center.x + 10f, center.y + 16f),
-                strokeWidth = 3f
-            )
-
-            // Tassels
             if (!showModifiedState) {
-                // Original: Golden flowing details
-                drawLine(
-                    color = tasselColor,
-                    start = Offset(center.x, center.y + 16f),
-                    end = Offset(center.x, center.y + 32f),
-                    strokeWidth = 2f
-                )
-                drawCircle(color = tasselColor, radius = 3f, center = Offset(center.x, center.y + 32f))
-            } else {
-                // Modified: Missing hanging tassel!
+                drawLine(Color(0xFFFFB703), Offset(center.x, center.y + 16f), Offset(center.x, center.y + 32f), strokeWidth = 2f)
+                drawCircle(color = Color(0xFFFFB703), radius = 3.5f, center = Offset(center.x, center.y + 32f))
             }
         }
 
         DifferenceType.CLASSIC_FAN -> {
-            val paperColor = Color(0xFFFCF6BD)
-            val woodColor = Color(0xFFD62828)
-
-            // Draw circular fan
-            drawCircle(color = paperColor, radius = 22f, center = center)
-            drawCircle(color = Color(0xFFE9C46A), radius = 22f, center = center, style = Stroke(width = 1.5f))
-
-            // Wooden handle
-            drawLine(
-                color = woodColor,
-                start = Offset(center.x, center.y + 22f),
-                end = Offset(center.x, center.y + 42f),
-                strokeWidth = 3f,
-                cap = StrokeCap.Round
-            )
+            drawCircle(Color(0xFFFCF6BD), radius = 22f, center = center)
+            drawCircle(Color(0xFFE9C46A), radius = 22f, center = center, style = Stroke(width = 1.5f))
+            drawLine(Color(0xFFD62828), Offset(center.x, center.y + 22f), Offset(center.x, center.y + 42f), strokeWidth = 3f, cap = StrokeCap.Round)
 
             if (!showModifiedState) {
-                // Original: Paint a delicate ink branch of plum blossom!
-                drawLine(
-                    color = Color(0xFF4A2511),
-                    start = Offset(center.x - 12f, center.y + 8f),
-                    end = Offset(center.x + 10f, center.y - 8f),
-                    strokeWidth = 2f
-                )
-                // Blooming pink plum dots
-                drawCircle(color = Color(0xFFE63946), radius = 3f, center = Offset(center.x - 4f, center.y + 2f))
-                drawCircle(color = Color(0xFFE63946), radius = 2f, center = Offset(center.x + 4f, center.y - 4f))
-            } else {
-                // Modified: The fan is empty / blank paper!
+                // Original: Beautiful ink painted plum flower bough
+                drawLine(Color(0xFF4A2511), Offset(center.x - 12f, center.y + 6f), Offset(center.x + 10f, center.y - 6f), strokeWidth = 2f)
+                drawCircle(Color(0xFFE63946), radius = 3.5f, center = Offset(center.x + 2f, center.y - 2f))
             }
         }
 
         DifferenceType.BRONZE_BELL -> {
             val bronzeCol = Color(0xFFCD7F32)
             val ironCol = Color(0xFF2F3E46)
-
-            // Bell main body shape (U-shaped upside down)
             val bellPath = Path().apply {
                 moveTo(center.x - 14f, center.y + 12f)
-                cubicTo(
-                    center.x - 14f, center.y - 16f,
-                    center.x + 14f, center.y - 16f,
-                    center.x + 14f, center.y + 12f
-                )
+                cubicTo(center.x - 14f, center.y - 16f, center.x + 14f, center.y - 16f, center.x + 14f, center.y + 12f)
                 close()
             }
             drawPath(color = bronzeCol, path = bellPath)
             drawPath(color = ironCol, path = bellPath, style = Stroke(width = 2f))
+            drawArc(ironCol, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(center.x - 6f, center.y - 20f), size = Size(12f, 12f), style = Stroke(width = 2.5f))
 
-            // Upper hanger loop
-            drawArc(
-                color = ironCol,
-                startAngle = 180f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(center.x - 6f, center.y - 20f),
-                size = Size(12f, 12f),
-                style = Stroke(width = 2.5f)
-            )
-
-            // Striking hammer inside
             if (!showModifiedState) {
-                // Original: has the hammer dangle
-                drawCircle(color = Color(0xFF4A2511), radius = 4f, center = Offset(center.x, center.y + 16f))
-                drawLine(
-                    color = Color(0xFF4AD511),
-                    start = Offset(center.x, center.y + 6f),
-                    end = Offset(center.x, center.y + 14f),
-                    strokeWidth = 2f
-                )
-            } else {
-                // Modified: Missing hammer!
+                drawCircle(Color(0xFF4A2511), radius = 4.5f, center = Offset(center.x, center.y + 16f))
+                drawLine(Color.DarkGray, Offset(center.x, center.y + 6f), Offset(center.x, center.y + 14f), strokeWidth = 2f)
             }
         }
 
         DifferenceType.INK_BUTTERFLY -> {
             val inkBlack = Color(0xFF264653)
             val wingColor = if (!showModifiedState) Color(0xFFE76F51) else Color(0xFF2E86AB)
-
-            // Draw classical chinese paint ink butterfly
-            // Left wings
+            // Left wings path
             val leftWing = Path().apply {
                 moveTo(center.x, center.y)
-                cubicTo(
-                    center.x - 16f, center.y - 16f,
-                    center.x - 20f, center.y,
-                    center.x - 8f, center.y + 4f
-                )
+                cubicTo(center.x - 16f, center.y - 16f, center.x - 20f, center.y, center.x - 8f, center.y + 4f)
                 close()
             }
             drawPath(color = wingColor, path = leftWing)
-            drawPath(color = inkBlack, path = leftWing, style = Stroke(width = 1.5f))
-
-            // Right wings
+            drawPath(color = inkBlack, path = leftWing, style = Stroke(width = 1.2f))
+            // Right wings path
             val rightWing = Path().apply {
                 moveTo(center.x, center.y)
-                cubicTo(
-                    center.x + 16f, center.y - 16f,
-                    center.x + 20f, center.y,
-                    center.x + 8f, center.y + 4f
-                )
+                cubicTo(center.x + 16f, center.y - 16f, center.x + 20f, center.y, center.x + 8f, center.y + 4f)
                 close()
             }
             drawPath(color = wingColor, path = rightWing)
-            drawPath(color = inkBlack, path = rightWing, style = Stroke(width = 1.5f))
+            drawPath(color = inkBlack, path = rightWing, style = Stroke(width = 1.2f))
 
-            // Butterfly body line
-            drawLine(
-                color = inkBlack,
-                start = Offset(center.x, center.y - 10f),
-                end = Offset(center.x, center.y + 8f),
-                strokeWidth = 3f,
-                cap = StrokeCap.Round
-            )
-
-            // Antennas
-            drawLine(
-                color = inkBlack,
-                start = Offset(center.x, center.y - 8f),
-                end = Offset(center.x - 8f, center.y - 15f),
-                strokeWidth = 1f
-            )
-            drawLine(
-                color = inkBlack,
-                start = Offset(center.x, center.y - 8f),
-                end = Offset(center.x + 8f, center.y - 15f),
-                strokeWidth = 1f
-            )
+            drawLine(inkBlack, Offset(center.x, center.y - 10f), Offset(center.x, center.y + 8f), strokeWidth = 3f, cap = StrokeCap.Round)
         }
 
         DifferenceType.SOARING_CRANE -> {
             val craneWhite = Color(0xFFF8F9FA)
             val customCrimson = Color(0xFFE63946)
+            drawLine(craneWhite, Offset(center.x - 24f, center.y + 6f), Offset(center.x + 24f, center.y - 8f), strokeWidth = 3.5f, cap = StrokeCap.Round)
 
-            // Draw stylized flying white crane in Chinese brush look (V-shape wing curve)
-            val bodyPath = Path().apply {
-                moveTo(center.x - 24f, center.y + 6f) // tail
-                lineTo(center.x + 18f, center.y - 6f) // head neck base
-                lineTo(center.x + 28f, center.y - 10f) // long peak beak
-            }
-            drawPath(color = craneWhite, path = bodyPath, style = Stroke(width = 3.5f, cap = StrokeCap.Round))
-
-            // Wings (Original: Large majestic widespread wing, Modified: shorter lower wings)
             val leftWingDetail = Path().apply {
                 moveTo(center.x - 4f, center.y - 2f)
-                quadraticTo(
-                    center.x - 16f, center.y - 28f,
-                    center.x - 12f, if (!showModifiedState) center.y - 34f else center.y - 12f
-                )
+                quadraticTo(center.x - 16f, center.y - 26f, center.x - 12f, if (!showModifiedState) center.y - 32f else center.y - 12f)
             }
-            drawPath(color = craneWhite, path = leftWingDetail, style = Stroke(width = 4f, cap = StrokeCap.Round))
+            drawPath(color = craneWhite, path = leftWingDetail, style = Stroke(width = 3.5f, cap = StrokeCap.Round))
 
-            val rightWingDetail = Path().apply {
-                moveTo(center.x - 6f, center.y + 2f)
-                quadraticTo(
-                    center.x + 12f, center.y + 26f,
-                    center.x + 16f, if (!showModifiedState) center.y + 32f else center.y + 12f
-                )
-            }
-            drawPath(color = craneWhite, path = rightWingDetail, style = Stroke(width = 3.5f, cap = StrokeCap.Round))
-
-            // Red crowned spot on head
             if (!showModifiedState) {
-                drawCircle(color = customCrimson, radius = 3.5f, center = Offset(center.x + 20f, center.y - 7f))
+                drawCircle(color = customCrimson, radius = 3.5f, center = Offset(center.x + 18f, center.y - 6f))
             } else {
-                // Modified: crane with black/yellow crown instead of red crown!
-                drawCircle(color = Color.DarkGray, radius = 2.5f, center = Offset(center.x + 20f, center.y - 7f))
+                drawCircle(color = Color.DarkGray, radius = 2.5f, center = Offset(center.x + 18f, center.y - 6f))
             }
         }
 
         DifferenceType.TEA_CUP -> {
-            // Antique fine china teacup
             val ceramicWhite = Color(0xFFF7F5F0)
             val cobaltBlue = Color(0xFF1D3557)
-
-            // Cup bowl body
             val bowlPath = Path().apply {
                 moveTo(center.x - 14f, center.y - 10f)
                 lineTo(center.x + 14f, center.y - 10f)
@@ -799,173 +567,62 @@ private fun DrawScope.drawDifferenceItem(
                 close()
             }
             drawPath(color = ceramicWhite, path = bowlPath)
-            drawPath(color = cobaltBlue, path = bowlPath, style = Stroke(width = 2f))
-
-            // Stand rim base
-            drawLine(
-                color = cobaltBlue,
-                start = Offset(center.x - 6f, center.y + 12f),
-                end = Offset(center.x + 6f, center.y + 12f),
-                strokeWidth = 3f,
-                cap = StrokeCap.Round
-            )
-
-            // Cobalt floral paint pattern
-            drawCircle(color = cobaltBlue, radius = 3.5f, center = Offset(center.x, center.y))
+            drawPath(color = cobaltBlue, path = bowlPath, style = Stroke(width = 1.8f))
+            drawLine(cobaltBlue, Offset(center.x - 6f, center.y + 12f), Offset(center.x + 6f, center.y + 12f), strokeWidth = 3f, cap = StrokeCap.Round)
 
             if (!showModifiedState) {
-                // Original: 3 lovely steam lines curling upward
-                val steamColor = Color(0xFFADB5BD)
-                val strokeW = 1.5f
-                drawLine(
-                    color = steamColor,
-                    start = Offset(center.x - 6f, center.y - 14f),
-                    end = Offset(center.x - 8f, center.y - 24f),
-                    strokeWidth = strokeW,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = steamColor,
-                    start = Offset(center.x, center.y - 14f),
-                    end = Offset(center.x + 2f, center.y - 26f),
-                    strokeWidth = strokeW,
-                    cap = StrokeCap.Round
-                )
-                drawLine(
-                    color = steamColor,
-                    start = Offset(center.x + 6f, center.y - 14f),
-                    end = Offset(center.x + 4f, center.y - 24f),
-                    strokeWidth = strokeW,
-                    cap = StrokeCap.Round
-                )
-            } else {
-                // Modified: No hot steam! Cold tea.
+                // Original: Steam curls
+                drawCircle(color = cobaltBlue, radius = 3.5f, center = Offset(center.x, center.y))
+                drawLine(Color(0xFFADB5BD), Offset(center.x, center.y - 14f), Offset(center.x + 2f, center.y - 24f), strokeWidth = 1.5f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.SCROLL_BOOK -> {
             val paperBg = Color(0xFFFAE19C)
             val woodBrn = Color(0xFF6B4E3D)
-
-            // Horizontal opened scroll painting
-            // Left scroll wooden roller
-            drawLine(
-                color = woodBrn,
-                start = Offset(center.x - 22f, center.y - 16f),
-                end = Offset(center.x - 22f, center.y + 16f),
-                strokeWidth = 4f,
-                cap = StrokeCap.Round
-            )
+            drawLine(woodBrn, Offset(center.x - 22f, center.y - 16f), Offset(center.x - 22f, center.y + 16f), strokeWidth = 4f, cap = StrokeCap.Round)
 
             if (!showModifiedState) {
-                // Original: standard fully opened scroll canvas
-                // Right scroll wooden roller
-                drawLine(
-                    color = woodBrn,
-                    start = Offset(center.x + 22f, center.y - 16f),
-                    end = Offset(center.x + 22f, center.y + 16f),
-                    strokeWidth = 4f,
-                    cap = StrokeCap.Round
-                )
-                // Paper backing
-                drawRect(
-                    color = paperBg,
-                    topLeft = Offset(center.x - 20f, center.y - 12f),
-                    size = Size(40f, 24f)
-                )
-                // Red seal stamp ornament (small red square)
-                drawRect(
-                    color = Color(0xFFB22222),
-                    topLeft = Offset(center.x - 12f, center.y - 5f),
-                    size = Size(6f, 6f)
-                )
-                // Small ink stroke lines (representing writing)
-                drawLine(Color.DarkGray, Offset(center.x + 2f, center.y - 6f), Offset(center.x + 2f, center.y + 6f), 1.5f)
-                drawLine(Color.DarkGray, Offset(center.x + 8f, center.y - 4f), Offset(center.x + 8f, center.y + 4f), 1.5f)
+                drawLine(woodBrn, Offset(center.x + 22f, center.y - 16f), Offset(center.x + 22f, center.y + 16f), strokeWidth = 4f, cap = StrokeCap.Round)
+                drawRect(color = paperBg, topLeft = Offset(center.x - 20f, center.y - 12f), size = Size(40f, 24f))
+                drawRect(color = Color(0xFFB22222), topLeft = Offset(center.x - 12f, center.y - 5f), size = Size(6f, 6f))
             } else {
-                // Modified: Scroll is partially rolled up!
-                drawRect(
-                    color = paperBg,
-                    topLeft = Offset(center.x - 20f, center.y - 12f),
-                    size = Size(20f, 24f)
-                )
-                // Wooden bar shifted inward
-                drawLine(
-                    color = woodBrn,
-                    start = Offset(center.x, center.y - 16f),
-                    end = Offset(center.x, center.y + 16f),
-                    strokeWidth = 4f,
-                    cap = StrokeCap.Round
-                )
+                drawRect(color = paperBg, topLeft = Offset(center.x - 20f, center.y - 12f), size = Size(20f, 24f))
+                drawLine(woodBrn, Offset(center.x, center.y - 16f), Offset(center.x, center.y + 16f), strokeWidth = 4f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.FLOWER_LOTUS -> {
             val petalPink = Color(0xFFFFB3C1)
             val stemGreen = Color(0xFF70E000)
-
-            // Stem
-            drawLine(
-                color = stemGreen,
-                start = Offset(center.x, center.y),
-                end = Offset(center.x, center.y + 24f),
-                strokeWidth = 2.5f
-            )
-
-            // Pink lotus petals outline
+            drawLine(color = stemGreen, start = Offset(center.x, center.y), end = Offset(center.x, center.y + 24f), strokeWidth = 2.5f)
             drawCircle(color = petalPink, radius = 10f, center = center)
-
-            // Overlapping side petals
             drawCircle(color = Color(0xFFFF85A1), radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
             drawCircle(color = Color(0xFFFF85A1), radius = 6f, center = Offset(center.x + 8f, center.y - 2f))
 
             if (!showModifiedState) {
-                // Original: Green lotus leaf is floating right next to it
-                drawOval(
-                    color = Color(0xFF38B000),
-                    topLeft = Offset(center.x - 22f, center.y + 6f),
-                    size = Size(18f, 10f)
-                )
+                drawOval(color = Color(0xFF38B000), topLeft = Offset(center.x - 22f, center.y + 6f), size = Size(18f, 10f))
             } else {
-                // Modified: Leaf is missing or turned completely dry withered yellow!
-                drawOval(
-                    color = Color(0xFFE9C46A),
-                    topLeft = Offset(center.x - 22f, center.y + 6f),
-                    size = Size(18f, 10f)
-                )
+                drawOval(color = Color(0xFFE9C46A), topLeft = Offset(center.x - 22f, center.y + 6f), size = Size(18f, 10f)) // withered leaf
             }
         }
 
         DifferenceType.ANCIENT_COIN -> {
             val goldBronze = Color(0xFFE9C46A)
             val darkRim = Color(0xFF4A3728)
-
-            // Draw Chinese copper coin with round exterior
             drawCircle(color = goldBronze, radius = 18f, center = center)
             drawCircle(color = darkRim, radius = 18f, center = center, style = Stroke(width = 2f))
 
             if (!showModifiedState) {
-                // Original: Standard classic square cut-out hole in center
-                drawRect(
-                    color = darkRim,
-                    topLeft = Offset(center.x - 4.5f, center.y - 4.5f),
-                    size = Size(9f, 9f)
-                )
+                drawRect(color = darkRim, topLeft = Offset(center.x - 4.5f, center.y - 4.5f), size = Size(9f, 9f))
             } else {
-                // Modified: Center hole is completely CIRCULAR or filled in!
-                drawCircle(
-                    color = darkRim,
-                    radius = 4.5f,
-                    center = center
-                )
+                drawCircle(color = darkRim, radius = 4.5f, center = center)
             }
         }
 
         DifferenceType.SPLASH_FISH -> {
             val fishRed = Color(0xFFD9381E)
             val splashColor = Color(0xFF0077B6)
-
-            // Leap curved body shape
             val body = Path().apply {
                 moveTo(center.x - 14f, center.y + 14f)
                 quadraticTo(center.x + 4f, center.y - 12f, center.x + 14f, center.y - 6f)
@@ -974,50 +631,15 @@ private fun DrawScope.drawDifferenceItem(
             }
             drawPath(color = fishRed, path = body)
 
-            // Tail fins
-            val tail = Path().apply {
-                moveTo(center.x - 14f, center.y + 14f)
-                lineTo(center.x - 24f, center.y + 10f)
-                lineTo(center.x - 20f, center.y + 20f)
-                close()
-            }
-            drawPath(color = fishRed, path = tail)
-
             if (!showModifiedState) {
-                // Original: Two cute splash arcs underneath
-                drawArc(
-                    color = splashColor,
-                    startAngle = 30f,
-                    sweepAngle = 120f,
-                    useCenter = false,
-                    topLeft = Offset(center.x - 20f, center.y + 8f),
-                    size = Size(40f, 14f),
-                    style = Stroke(width = 2f, cap = StrokeCap.Round)
-                )
-                drawArc(
-                    color = splashColor,
-                    startAngle = 15f,
-                    sweepAngle = 140f,
-                    useCenter = false,
-                    topLeft = Offset(center.x - 12f, center.y + 14f),
-                    size = Size(24f, 10f),
-                    style = Stroke(width = 1.5f)
-                )
+                drawArc(color = splashColor, startAngle = 30f, sweepAngle = 120f, useCenter = false, topLeft = Offset(center.x - 16f, center.y + 8f), size = Size(32f, 12f), style = Stroke(width = 2f, cap = StrokeCap.Round))
             } else {
-                // Modified: Splash ripples are flat lines!
-                drawLine(
-                    color = splashColor,
-                    start = Offset(center.x - 20f, center.y + 16f),
-                    end = Offset(center.x + 20f, center.y + 16f),
-                    strokeWidth = 1.5f
-                )
+                drawLine(color = splashColor, start = Offset(center.x - 16f, center.y + 12f), end = Offset(center.x + 16f, center.y + 12f), strokeWidth = 1.5f)
             }
         }
 
         DifferenceType.CLOUDS -> {
             val cloudOutline = if (!showModifiedState) Color(0xFFE9C46A) else Color(0xFF4A4E69)
-
-            // Drawn stylized auspicious scrolls (祥云)
             val cloudPath = Path().apply {
                 moveTo(center.x - 20f, center.y + 4f)
                 quadraticTo(center.x - 10f, center.y - 12f, center.x, center.y - 2f)
@@ -1026,131 +648,52 @@ private fun DrawScope.drawDifferenceItem(
                 quadraticTo(center.x - 14f, center.y + 14f, center.x - 20f, center.y + 4f)
                 close()
             }
-            drawPath(
-                color = if (!showModifiedState) Color(0xFFFFFFFF).copy(alpha = 0.85f) else Color(0xFFDFE2DB).copy(alpha = 0.6f),
-                path = cloudPath
-            )
-            drawPath(
-                color = cloudOutline,
-                path = cloudPath,
-                style = Stroke(width = 2f)
-            )
+            drawPath(color = if (!showModifiedState) Color.White.copy(alpha = 0.85f) else Color(0xFFDFE2DB).copy(alpha = 0.6f), path = cloudPath)
+            drawPath(color = cloudOutline, path = cloudPath, style = Stroke(width = 2f))
         }
 
         DifferenceType.TREE_BRANCH -> {
-            val woodColor = Color(0xFF4A3728)
-            val leafColor = Color(0xFF4F772D)
-
-            // Drooping branch line
-            drawLine(
-                color = woodColor,
-                start = Offset(center.x - 20f, center.y - 12f),
-                end = Offset(center.x + 14f, center.y + 10f),
-                strokeWidth = 3f,
-                cap = StrokeCap.Round
-            )
-
+            drawLine(Color(0xFF4A3728), Offset(center.x - 20f, center.y - 12f), Offset(center.x + 14f, center.y + 10f), strokeWidth = 3f, cap = StrokeCap.Round)
             if (!showModifiedState) {
-                // Original: multiple green leaf bundles
-                drawCircle(color = leafColor, radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
-                drawCircle(color = leafColor, radius = 6f, center = Offset(center.x + 4f, center.y + 6f))
-                drawCircle(color = leafColor, radius = 5f, center = Offset(center.x + 14f, center.y + 11f))
-                drawCircle(color = Color(0xFF90A955), radius = 4f, center = Offset(center.x - 15f, center.y - 8f))
+                drawCircle(Color(0xFF4F772D), radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
+                drawCircle(Color(0xFF4F772D), radius = 6f, center = Offset(center.x + 4f, center.y + 6f))
             } else {
-                // Modified: severely pruned, missing leaves!
-                drawCircle(color = leafColor, radius = 4f, center = Offset(center.x + 14f, center.y + 11f))
+                drawCircle(Color(0xFF4F772D), radius = 4f, center = Offset(center.x + 4f, center.y + 6f))
             }
         }
 
         DifferenceType.PAGODA -> {
             val silhouette = Color(0xFF2B2D42)
-
-            // Pagoda layers base (step levels)
             val baseRect1 = Path().apply {
-                moveTo(center.x - 18f, center.y + 16f)
-                lineTo(center.x + 18f, center.y + 16f)
-                lineTo(center.x + 12f, center.y + 4f)
-                lineTo(center.x - 12f, center.y + 4f)
-                close()
-            }
-            val baseRect2 = Path().apply {
-                moveTo(center.x - 11f, center.y + 4f)
-                lineTo(center.x + 11f, center.y + 4f)
-                lineTo(center.x + 7f, center.y - 8f)
-                lineTo(center.x - 7f, center.y - 8f)
+                moveTo(center.x - 15f, center.y + 12f)
+                lineTo(center.x + 15f, center.y + 12f)
+                lineTo(center.x + 10f, center.y + 2f)
+                lineTo(center.x - 10f, center.y + 2f)
                 close()
             }
             drawPath(color = silhouette, path = baseRect1)
-            drawPath(color = silhouette, path = baseRect2)
 
             if (!showModifiedState) {
-                // Original: Pagoda tall golden spindle needle tip pointing up
-                drawLine(
-                    color = Color(0xFFE9C46A),
-                    start = Offset(center.x, center.y - 8f),
-                    end = Offset(center.x, center.y - 28f),
-                    strokeWidth = 2.5f,
-                    cap = StrokeCap.Round
-                )
-                drawCircle(color = Color(0xFFE9C46A), radius = 3f, center = Offset(center.x, center.y - 22f))
+                drawLine(Color(0xFFE9C46A), Offset(center.x, center.y + 2f), Offset(center.x, center.y - 16f), strokeWidth = 2.5f, cap = StrokeCap.Round)
             } else {
-                // Modified: broken tip
-                drawLine(
-                    color = silhouette,
-                    start = Offset(center.x, center.y - 8f),
-                    end = Offset(center.x, center.y - 14f),
-                    strokeWidth = 2.5f,
-                    cap = StrokeCap.Round
-                )
+                drawLine(silhouette, Offset(center.x, center.y + 2f), Offset(center.x, center.y - 8f), strokeWidth = 2.5f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.INCENSE_BURNER -> {
             val burnerCol = Color(0xFF9B7E46)
             val outlineCol = Color(0xFF422F13)
-
-            // Three-legged traditional incense urn container
-            // Left & Right feet
-            drawLine(outlineCol, Offset(center.x - 12f, center.y), Offset(center.x - 15f, center.y + 16f), 4f)
-            drawLine(outlineCol, Offset(center.x + 12f, center.y), Offset(center.x + 15f, center.y + 16f), 4f)
-            drawLine(outlineCol, Offset(center.x, center.y), Offset(center.x, center.y + 16f), 4f) // Center foot
-
-            // Urn body circle
-            drawCircle(color = burnerCol, radius = 16f, center = center)
-            drawCircle(color = outlineCol, radius = 16f, center = center, style = Stroke(width = 2f))
-
-            // Two handles
-            drawArc(
-                color = outlineCol,
-                startAngle = 90f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(center.x - 22f, center.y - 10f),
-                size = Size(10f, 20f),
-                style = Stroke(width = 2.5f)
-            )
-            drawArc(
-                color = outlineCol,
-                startAngle = 270f,
-                sweepAngle = 180f,
-                useCenter = false,
-                topLeft = Offset(center.x + 12f, center.y - 10f),
-                size = Size(10f, 20f),
-                style = Stroke(width = 2.5f)
-            )
+            drawLine(outlineCol, Offset(center.x - 10f, center.y), Offset(center.x - 12f, center.y + 14f), 3.5f)
+            drawLine(outlineCol, Offset(center.x + 10f, center.y), Offset(center.x + 12f, center.y + 14f), 3.5f)
+            drawCircle(color = burnerCol, radius = 14f, center = center)
+            drawCircle(color = outlineCol, radius = 14f, center = center, style = Stroke(width = 1.8f))
 
             if (!showModifiedState) {
-                // Original: incense fumes curling upwards
-                val smokeBrush = Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, Color(0x66CAE9FF), Color(0xAA90E0EF))
-                )
                 val smokePath = Path().apply {
                     moveTo(center.x, center.y - 8f)
-                    cubicTo(center.x - 8f, center.y - 24f, center.x + 8f, center.y - 32f, center.x, center.y - 48f)
+                    cubicTo(center.x - 6f, center.y - 18f, center.x + 6f, center.y - 24f, center.x, center.y - 36f)
                 }
-                drawPath(path = smokePath, brush = smokeBrush, style = Stroke(width = 2f, cap = StrokeCap.Round))
-            } else {
-                // Modified: No smoke!
+                drawPath(path = smokePath, color = Color(0xBBCAE9FF), style = Stroke(width = 1.8f, cap = StrokeCap.Round))
             }
         }
     }
