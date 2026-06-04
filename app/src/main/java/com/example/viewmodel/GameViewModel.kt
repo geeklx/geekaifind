@@ -62,10 +62,34 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 initialValue = emptyList()
             )
 
+        // Randomly scatter and position the differences for level 1 on start
+        _activeLevel.value = randomizeLevel(LevelDefinitions.levels[0])
+
         // Prep the progress table on startup with levels 1..20
         viewModelScope.launch {
             repository.initializeDatabaseIfEmpty()
         }
+    }
+
+    private fun randomizeLevel(baseLvl: LevelDefinition): LevelDefinition {
+        val quadrants = listOf(
+            Pair(0.15f..0.43f, 0.16f..0.43f),
+            Pair(0.57f..0.85f, 0.16f..0.43f),
+            Pair(0.15f..0.43f, 0.55f..0.80f),
+            Pair(0.57f..0.85f, 0.55f..0.80f)
+        ).shuffled()
+
+        val random = java.util.Random()
+        val randomizedDifferences = baseLvl.differences.mapIndexed { index, diff ->
+            val quad = quadrants.getOrElse(index) { Pair(0.2f..0.8f, 0.2f..0.8f) }
+            val rx = quad.first.start + (quad.first.endInclusive - quad.first.start) * random.nextFloat()
+            val ry = quad.second.start + (quad.second.endInclusive - quad.second.start) * random.nextFloat()
+            diff.copy(
+                x = rx,
+                y = ry
+            )
+        }
+        return baseLvl.copy(differences = randomizedDifferences)
     }
 
     enum class Screen {
@@ -111,7 +135,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectLevel(levelId: Int) {
         val lvl = LevelDefinitions.levels.firstOrNull { it.id == levelId } ?: LevelDefinitions.levels[0]
-        _activeLevel.value = lvl
+        _activeLevel.value = randomizeLevel(lvl)
         _discoveredIds.value = emptySet()
         _showCompletionDialog.value = false
         _timerSeconds.value = 0

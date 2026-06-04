@@ -30,8 +30,21 @@ import com.example.model.BackgroundStyle
 import com.example.model.DifferenceDefinition
 import com.example.model.DifferenceType
 import com.example.model.LevelDefinition
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import kotlin.math.cos
 import kotlin.math.sin
+
+// Traditional Chinese Calligraphy and Painting Mineral Pigments
+val TraditionalInkBlack = Color(0xD51D242B)     // 黛黑 / 深冷水墨
+val TraditionalVermillion = Color(0xD5BC3F2F)    // 朱砂 / 宫廷红
+val TraditionalGold = Color(0xB8B9914A)          // 鎏金 / 暗金色
+val TraditionalJade = Color(0xD53A6849)          // 石绿 / 苍秀青松竹翠
+val TraditionalIndigo = Color(0xD5244E68)        // 靛青 / 青花瓷
+val TraditionalOchre = Color(0xD5825330)         // 赭石 / 古木枝干矿色
+val TraditionalWhite = Color(0xDCE8DEC7)         // 宣纸折纸白 / 米黄
+val TraditionalInkHalo = Color(0x1C181D24)       // 水墨在宣纸上的渗湿晕染光圈
 
 /**
  * Renders the Spot the Difference Canvas with elegant Chinese painting backgrounds
@@ -55,15 +68,26 @@ fun SpotTheDifferenceCanvas(
         val width = maxWidth
         val height = maxHeight
 
-        // Dynamic Chinese-themed background gradients
-        val backgroundBrush = remember(level.backgroundType) {
-            getBackgroundBrush(level.backgroundType)
+        val bgImageRes = remember(level.backgroundType) {
+            when (level.backgroundType) {
+                BackgroundStyle.INK_WASH_GOLD -> com.example.R.drawable.img_bg_ink_wash_gold_1780555350219
+                BackgroundStyle.MISTY_JADE -> com.example.R.drawable.img_bg_misty_jade_1780555369325
+                BackgroundStyle.MIDNIGHT_INDIGO -> com.example.R.drawable.img_bg_midnight_indigo_1780555386334
+                BackgroundStyle.IMPERIAL_RED -> com.example.R.drawable.img_bg_imperial_red_1780555403738
+                BackgroundStyle.SCHOLAR_BROWN -> com.example.R.drawable.img_bg_scholar_brown_1780555421689
+            }
         }
+
+        Image(
+            painter = painterResource(id = bgImageRes),
+            contentDescription = "Ancient Chinese scroll painting background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundBrush)
                 .pointerInput(level.id) {
                     detectTapGestures { offset ->
                         // Convert absolute tap offset to ratios (0f to 1f)
@@ -423,7 +447,7 @@ private fun DrawScope.drawScrollBadge(level: LevelDefinition, size: Size, isModi
 }
 
 /**
- * Draws the specific spot-the-difference element procedurally and cleanly!
+ * Draws the specific spot-the-difference element procedurally and cleanly with traditional brushwork rules!
  */
 private fun DrawScope.drawDifferenceItem(
     type: DifferenceType,
@@ -434,38 +458,53 @@ private fun DrawScope.drawDifferenceItem(
 ) {
     val showModifiedState = isModifiedImage && !isSolved
 
+    // Render a subtle wet-ink bleeding wash background (晕染效果)
+    // This creates an organic shadow underneath each element so it blends perfectly into the antique scroll 
+    drawCircle(
+        color = TraditionalInkHalo,
+        radius = 32f,
+        center = center
+    )
+    drawCircle(
+        color = TraditionalInkHalo.copy(alpha = TraditionalInkHalo.alpha * 0.4f),
+        radius = 42f,
+        center = center
+    )
+
     when (type) {
         DifferenceType.QING_OFFICIAL_HAT -> {
-            val darkBlue = Color(0xFF14213D)
-            val crimsonRed = Color(0xFF9E2A2B)
-            val brightGold = Color(0xFFFCA311)
-            // Hat base caps
-            drawArc(darkBlue, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(center.x - 24f, center.y - 12f), size = Size(48f, 24f))
-            drawOval(darkBlue, topLeft = Offset(center.x - 30f, center.y + 6f), size = Size(60f, 10f))
-            drawArc(crimsonRed, startAngle = 180f, sweepAngle = 180f, useCenter = true, topLeft = Offset(center.x - 12f, center.y - 16f), size = Size(24f, 12f))
-            drawCircle(color = brightGold, radius = 5f, center = Offset(center.x, center.y - 17f))
+            // Hat base cap (黛黑与朱砂红色)
+            drawArc(TraditionalInkBlack, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(center.x - 24f, center.y - 12f), size = Size(48f, 24f))
+            drawOval(TraditionalInkBlack, topLeft = Offset(center.x - 28f, center.y + 6f), size = Size(56f, 10f))
+            drawArc(TraditionalVermillion, startAngle = 180f, sweepAngle = 180f, useCenter = true, topLeft = Offset(center.x - 12f, center.y - 16f), size = Size(24f, 12f))
+            
+            // Gold bead at center (鎏金珠顶)
+            drawCircle(color = TraditionalGold, radius = 5.5f, center = Offset(center.x, center.y - 17f))
 
             if (!showModifiedState) {
-                // Original: Peacock Feather Plume dangles to the right
-                drawLine(Color(0xFF1B4332), Offset(center.x, center.y - 15f), Offset(center.x + 28f, center.y - 6f), strokeWidth = 3f, cap = StrokeCap.Round)
-                drawCircle(Color(0xFF40916C), radius = 4f, center = Offset(center.x + 28f, center.y - 6f))
+                // Original: Peacock Feather Plume dangles to the right (双眼花翎)
+                drawLine(TraditionalJade, Offset(center.x, center.y - 15f), Offset(center.x + 28f, center.y - 6f), strokeWidth = 3.5f, cap = StrokeCap.Round)
+                drawCircle(TraditionalGold, radius = 4.5f, center = Offset(center.x + 28f, center.y - 6f))
+                drawCircle(TraditionalIndigo, radius = 2.5f, center = Offset(center.x + 28f, center.y - 6f))
             } else {
-                // Modified: Peacock Feather is shortened or missing
-                drawLine(Color(0xFF00B4D8), Offset(center.x, center.y - 15f), Offset(center.x + 10f, center.y - 14f), strokeWidth = 3f, cap = StrokeCap.Round)
+                // Modified: Peacock Feather is shortened/missing dangles (缺顶戴花翎)
+                drawLine(TraditionalOchre, Offset(center.x, center.y - 15f), Offset(center.x + 8f, center.y - 14f), strokeWidth = 3.5f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.PALACE_LANTERN -> {
-            val frameColor = Color(0xFF4E2C15)
-            val clothColor = Color(0xFFD90429)
-            // Rope and base support frames
-            drawLine(frameColor, Offset(center.x, center.y - 30f), Offset(center.x, center.y - 16f), strokeWidth = 2f)
+            // Lantern rope & support structures in Ochre brown 
+            drawLine(TraditionalOchre, Offset(center.x, center.y - 30f), Offset(center.x, center.y - 16f), strokeWidth = 2.5f)
+            
             if (!showModifiedState) {
-                drawCircle(Color(0xFFFFEA70).copy(alpha = 0.5f), radius = 28f, center = center) // Glowing!
+                // Soft warm glow aura for the lit palace lantern (红灯火光阴影)
+                drawCircle(TraditionalGold.copy(alpha = 0.35f), radius = 28f, center = center)
             } else {
-                drawCircle(Color(0x33000000), radius = 24f, center = center) // Dark/Dull unlit
+                // Dim unlit mask (未点亮红灯)
+                drawCircle(TraditionalInkBlack.copy(alpha = 0.25f), radius = 22f, center = center)
             }
-            // Traditional hexagonal body shape path
+
+            // Traditional hexagonal palace lantern body
             val bodyPath = Path().apply {
                 moveTo(center.x - 8f, center.y - 16f)
                 lineTo(center.x + 8f, center.y - 16f)
@@ -475,57 +514,61 @@ private fun DrawScope.drawDifferenceItem(
                 lineTo(center.x - 16f, center.y)
                 close()
             }
-            drawPath(color = if (!showModifiedState) clothColor else Color(0xFF8B2635), path = bodyPath)
-            drawLine(frameColor, Offset(center.x - 10f, center.y - 16f), Offset(center.x + 10f, center.y - 16f), strokeWidth = 3f)
-            drawLine(frameColor, Offset(center.x - 10f, center.y + 16f), Offset(center.x + 10f, center.y + 16f), strokeWidth = 3f)
+            drawPath(color = if (!showModifiedState) TraditionalVermillion else TraditionalVermillion.copy(alpha = 0.5f), path = bodyPath)
+            drawPath(color = TraditionalInkBlack, path = bodyPath, style = Stroke(width = 1.5f))
+
+            drawLine(TraditionalInkBlack, Offset(center.x - 10f, center.y - 16f), Offset(center.x + 10f, center.y - 16f), strokeWidth = 3f)
+            drawLine(TraditionalInkBlack, Offset(center.x - 10f, center.y + 16f), Offset(center.x + 10f, center.y + 16f), strokeWidth = 3f)
 
             if (!showModifiedState) {
-                drawLine(Color(0xFFFFB703), Offset(center.x, center.y + 16f), Offset(center.x, center.y + 32f), strokeWidth = 2f)
-                drawCircle(color = Color(0xFFFFB703), radius = 3.5f, center = Offset(center.x, center.y + 32f))
+                // Golden tassel (流苏穗子)
+                drawLine(TraditionalGold, Offset(center.x, center.y + 16f), Offset(center.x, center.y + 32f), strokeWidth = 2.5f)
+                drawCircle(color = TraditionalVermillion, radius = 4f, center = Offset(center.x, center.y + 32f))
             }
         }
 
         DifferenceType.CLASSIC_FAN -> {
-            drawCircle(Color(0xFFFCF6BD), radius = 22f, center = center)
-            drawCircle(Color(0xFFE9C46A), radius = 22f, center = center, style = Stroke(width = 1.5f))
-            drawLine(Color(0xFFD62828), Offset(center.x, center.y + 22f), Offset(center.x, center.y + 42f), strokeWidth = 3f, cap = StrokeCap.Round)
+            // Silk fan outline in White & Gold (鎏金团扇)
+            drawCircle(TraditionalWhite, radius = 22f, center = center)
+            drawCircle(TraditionalGold, radius = 22f, center = center, style = Stroke(width = 1.8f))
+            drawLine(TraditionalOchre, Offset(center.x, center.y + 22f), Offset(center.x, center.y + 42f), strokeWidth = 3.5f, cap = StrokeCap.Round)
 
             if (!showModifiedState) {
-                // Original: Beautiful ink painted plum flower bough
-                drawLine(Color(0xFF4A2511), Offset(center.x - 12f, center.y + 6f), Offset(center.x + 10f, center.y - 6f), strokeWidth = 2f)
-                drawCircle(Color(0xFFE63946), radius = 3.5f, center = Offset(center.x + 2f, center.y - 2f))
+                // Original: Beautiful ink painted plum flower bough (水墨梅花)
+                drawLine(TraditionalInkBlack, Offset(center.x - 12f, center.y + 6f), Offset(center.x + 10f, center.y - 6f), strokeWidth = 2f)
+                drawCircle(TraditionalVermillion, radius = 4f, center = Offset(center.x + 2f, center.y - 2f))
+                drawCircle(TraditionalVermillion, radius = 3f, center = Offset(center.x - 8f, center.y + 3f))
             }
         }
 
         DifferenceType.BRONZE_BELL -> {
-            val bronzeCol = Color(0xFFCD7F32)
-            val ironCol = Color(0xFF2F3E46)
             val bellPath = Path().apply {
                 moveTo(center.x - 14f, center.y + 12f)
                 cubicTo(center.x - 14f, center.y - 16f, center.x + 14f, center.y - 16f, center.x + 14f, center.y + 12f)
                 close()
             }
-            drawPath(color = bronzeCol, path = bellPath)
-            drawPath(color = ironCol, path = bellPath, style = Stroke(width = 2f))
-            drawArc(ironCol, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(center.x - 6f, center.y - 20f), size = Size(12f, 12f), style = Stroke(width = 2.5f))
+            drawPath(color = TraditionalOchre, path = bellPath)
+            drawPath(color = TraditionalInkBlack, path = bellPath, style = Stroke(width = 2f))
+            drawArc(TraditionalInkBlack, startAngle = 180f, sweepAngle = 180f, useCenter = false, topLeft = Offset(center.x - 6f, center.y - 20f), size = Size(12f, 12f), style = Stroke(width = 2.5f))
 
             if (!showModifiedState) {
-                drawCircle(Color(0xFF4A2511), radius = 4.5f, center = Offset(center.x, center.y + 16f))
-                drawLine(Color.DarkGray, Offset(center.x, center.y + 6f), Offset(center.x, center.y + 14f), strokeWidth = 2f)
+                // Bell clapper (铜钟摆锤)
+                drawCircle(TraditionalVermillion, radius = 4.5f, center = Offset(center.x, center.y + 16f))
+                drawLine(TraditionalInkBlack, Offset(center.x, center.y + 6f), Offset(center.x, center.y + 14f), strokeWidth = 2.5f)
             }
         }
 
         DifferenceType.INK_BUTTERFLY -> {
-            val inkBlack = Color(0xFF264653)
-            val wingColor = if (!showModifiedState) Color(0xFFE76F51) else Color(0xFF2E86AB)
-            // Left wings path
+            val wingColor = if (!showModifiedState) TraditionalVermillion.copy(alpha = 0.85f) else TraditionalIndigo.copy(alpha = 0.85f)
+            // Left wings path using double brush wash arcs
             val leftWing = Path().apply {
                 moveTo(center.x, center.y)
                 cubicTo(center.x - 16f, center.y - 16f, center.x - 20f, center.y, center.x - 8f, center.y + 4f)
                 close()
             }
             drawPath(color = wingColor, path = leftWing)
-            drawPath(color = inkBlack, path = leftWing, style = Stroke(width = 1.2f))
+            drawPath(color = TraditionalInkBlack, path = leftWing, style = Stroke(width = 1.5f))
+            
             // Right wings path
             val rightWing = Path().apply {
                 moveTo(center.x, center.y)
@@ -533,32 +576,38 @@ private fun DrawScope.drawDifferenceItem(
                 close()
             }
             drawPath(color = wingColor, path = rightWing)
-            drawPath(color = inkBlack, path = rightWing, style = Stroke(width = 1.2f))
+            drawPath(color = TraditionalInkBlack, path = rightWing, style = Stroke(width = 1.5f))
 
-            drawLine(inkBlack, Offset(center.x, center.y - 10f), Offset(center.x, center.y + 8f), strokeWidth = 3f, cap = StrokeCap.Round)
+            // Body and antennae
+            drawLine(TraditionalInkBlack, Offset(center.x, center.y - 10f), Offset(center.x, center.y + 8f), strokeWidth = 3.5f, cap = StrokeCap.Round)
+            drawLine(TraditionalInkBlack, Offset(center.x, center.y - 10f), Offset(center.x - 6f, center.y - 16f), strokeWidth = 1f)
+            drawLine(TraditionalInkBlack, Offset(center.x, center.y - 10f), Offset(center.x + 6f, center.y - 16f), strokeWidth = 1f)
         }
 
         DifferenceType.SOARING_CRANE -> {
-            val craneWhite = Color(0xFFF8F9FA)
-            val customCrimson = Color(0xFFE63946)
-            drawLine(craneWhite, Offset(center.x - 24f, center.y + 6f), Offset(center.x + 24f, center.y - 8f), strokeWidth = 3.5f, cap = StrokeCap.Round)
+            // Elegant flying immortal white crane (仙鹤高飞)
+            drawLine(TraditionalWhite, Offset(center.x - 24f, center.y + 6f), Offset(center.x + 24f, center.y - 8f), strokeWidth = 4f, cap = StrokeCap.Round)
 
             val leftWingDetail = Path().apply {
                 moveTo(center.x - 4f, center.y - 2f)
                 quadraticTo(center.x - 16f, center.y - 26f, center.x - 12f, if (!showModifiedState) center.y - 32f else center.y - 12f)
             }
-            drawPath(color = craneWhite, path = leftWingDetail, style = Stroke(width = 3.5f, cap = StrokeCap.Round))
+            drawPath(color = TraditionalWhite, path = leftWingDetail, style = Stroke(width = 4f, cap = StrokeCap.Round))
+            
+            // Wingtip ink trim
+            drawLine(TraditionalInkBlack, Offset(center.x - 24f, center.y + 6f), Offset(center.x - 14f, center.y + 4f), strokeWidth = 3f)
 
             if (!showModifiedState) {
-                drawCircle(color = customCrimson, radius = 3.5f, center = Offset(center.x + 18f, center.y - 6f))
+                // Vermillion crown on top (丹顶鹤朱砂顶点缀)
+                drawCircle(color = TraditionalVermillion, radius = 3.5f, center = Offset(center.x + 18f, center.y - 6f))
             } else {
-                drawCircle(color = Color.DarkGray, radius = 2.5f, center = Offset(center.x + 18f, center.y - 6f))
+                // Normal plain crown head
+                drawCircle(color = TraditionalInkBlack, radius = 2.5f, center = Offset(center.x + 18f, center.y - 6f))
             }
         }
 
         DifferenceType.TEA_CUP -> {
-            val ceramicWhite = Color(0xFFF7F5F0)
-            val cobaltBlue = Color(0xFF1D3557)
+            // Blue-and-white porcelain tea cup (青花瓷盖碗)
             val bowlPath = Path().apply {
                 moveTo(center.x - 14f, center.y - 10f)
                 lineTo(center.x + 14f, center.y - 10f)
@@ -566,63 +615,68 @@ private fun DrawScope.drawDifferenceItem(
                 quadraticTo(center.x - 12f, center.y + 8f, center.x - 14f, center.y - 10f)
                 close()
             }
-            drawPath(color = ceramicWhite, path = bowlPath)
-            drawPath(color = cobaltBlue, path = bowlPath, style = Stroke(width = 1.8f))
-            drawLine(cobaltBlue, Offset(center.x - 6f, center.y + 12f), Offset(center.x + 6f, center.y + 12f), strokeWidth = 3f, cap = StrokeCap.Round)
+            drawPath(color = TraditionalWhite, path = bowlPath)
+            drawPath(color = TraditionalIndigo, path = bowlPath, style = Stroke(width = 2f))
+            drawLine(TraditionalIndigo, Offset(center.x - 6f, center.y + 12f), Offset(center.x + 6f, center.y + 12f), strokeWidth = 3f, cap = StrokeCap.Round)
 
             if (!showModifiedState) {
-                // Original: Steam curls
-                drawCircle(color = cobaltBlue, radius = 3.5f, center = Offset(center.x, center.y))
-                drawLine(Color(0xFFADB5BD), Offset(center.x, center.y - 14f), Offset(center.x + 2f, center.y - 24f), strokeWidth = 1.5f, cap = StrokeCap.Round)
+                // Original: Splied curl of hot aromatic steam (香气飘走)
+                drawLine(TraditionalGold.copy(alpha = 0.6f), Offset(center.x, center.y - 12f), Offset(center.x - 3f, center.y - 22f), strokeWidth = 2f, cap = StrokeCap.Round)
+                drawLine(TraditionalGold.copy(alpha = 0.6f), Offset(center.x + 4f, center.y - 12f), Offset(center.x + 2f, center.y - 24f), strokeWidth = 2f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.SCROLL_BOOK -> {
-            val paperBg = Color(0xFFFAE19C)
-            val woodBrn = Color(0xFF6B4E3D)
-            drawLine(woodBrn, Offset(center.x - 22f, center.y - 16f), Offset(center.x - 22f, center.y + 16f), strokeWidth = 4f, cap = StrokeCap.Round)
+            // Jade/wood scroll rollers (画轴卷轴)
+            drawLine(TraditionalOchre, Offset(center.x - 22f, center.y - 16f), Offset(center.x - 22f, center.y + 16f), strokeWidth = 4.5f, cap = StrokeCap.Round)
 
             if (!showModifiedState) {
-                drawLine(woodBrn, Offset(center.x + 22f, center.y - 16f), Offset(center.x + 22f, center.y + 16f), strokeWidth = 4f, cap = StrokeCap.Round)
-                drawRect(color = paperBg, topLeft = Offset(center.x - 20f, center.y - 12f), size = Size(40f, 24f))
-                drawRect(color = Color(0xFFB22222), topLeft = Offset(center.x - 12f, center.y - 5f), size = Size(6f, 6f))
+                drawLine(TraditionalOchre, Offset(center.x + 22f, center.y - 16f), Offset(center.x + 22f, center.y + 16f), strokeWidth = 4.5f, cap = StrokeCap.Round)
+                drawRect(color = TraditionalWhite, topLeft = Offset(center.x - 20f, center.y - 12f), size = Size(40f, 24f))
+                
+                // Traditional Vermillion study ink seal stamp (朱砂小方印)
+                drawRect(color = TraditionalVermillion, topLeft = Offset(center.x - 10f, center.y - 5f), size = Size(7f, 7f))
             } else {
-                drawRect(color = paperBg, topLeft = Offset(center.x - 20f, center.y - 12f), size = Size(20f, 24f))
-                drawLine(woodBrn, Offset(center.x, center.y - 16f), Offset(center.x, center.y + 16f), strokeWidth = 4f, cap = StrokeCap.Round)
+                drawRect(color = TraditionalWhite, topLeft = Offset(center.x - 20f, center.y - 12f), size = Size(20f, 24f))
+                drawLine(TraditionalOchre, Offset(center.x, center.y - 16f), Offset(center.x, center.y + 16f), strokeWidth = 4.5f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.FLOWER_LOTUS -> {
-            val petalPink = Color(0xFFFFB3C1)
-            val stemGreen = Color(0xFF70E000)
-            drawLine(color = stemGreen, start = Offset(center.x, center.y), end = Offset(center.x, center.y + 24f), strokeWidth = 2.5f)
-            drawCircle(color = petalPink, radius = 10f, center = center)
-            drawCircle(color = Color(0xFFFF85A1), radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
-            drawCircle(color = Color(0xFFFF85A1), radius = 6f, center = Offset(center.x + 8f, center.y - 2f))
+            // Elegant lotus stalks (荷花并蒂)
+            drawLine(color = TraditionalJade, start = Offset(center.x, center.y), end = Offset(center.x, center.y + 24f), strokeWidth = 3f)
+            
+            // Soft red lotus petals (朱砂红晕染荷花)
+            drawCircle(color = TraditionalVermillion.copy(alpha = 0.5f), radius = 10f, center = center)
+            drawCircle(color = TraditionalVermillion.copy(alpha = 0.7f), radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
+            drawCircle(color = TraditionalVermillion.copy(alpha = 0.7f), radius = 6f, center = Offset(center.x + 8f, center.y - 2f))
 
             if (!showModifiedState) {
-                drawOval(color = Color(0xFF38B000), topLeft = Offset(center.x - 22f, center.y + 6f), size = Size(18f, 10f))
+                // Rich green lotus pad (石绿荷叶)
+                drawOval(color = TraditionalJade, topLeft = Offset(center.x - 22f, center.y + 6f), size = Size(18f, 10f))
             } else {
-                drawOval(color = Color(0xFFE9C46A), topLeft = Offset(center.x - 22f, center.y + 6f), size = Size(18f, 10f)) // withered leaf
+                // Withered yellowing lotus leaf (落叶悲秋)
+                drawOval(color = TraditionalOchre, topLeft = Offset(center.x - 22f, center.y + 6f), size = Size(16f, 8f))
             }
         }
 
         DifferenceType.ANCIENT_COIN -> {
-            val goldBronze = Color(0xFFE9C46A)
-            val darkRim = Color(0xFF4A3728)
-            drawCircle(color = goldBronze, radius = 18f, center = center)
-            drawCircle(color = darkRim, radius = 18f, center = center, style = Stroke(width = 2f))
+            // Antique copper coin (开元通宝/乾隆通宝古钱币)
+            drawCircle(color = TraditionalGold, radius = 18f, center = center)
+            drawCircle(color = TraditionalInkBlack, radius = 18f, center = center, style = Stroke(width = 1.8f))
 
             if (!showModifiedState) {
-                drawRect(color = darkRim, topLeft = Offset(center.x - 4.5f, center.y - 4.5f), size = Size(9f, 9f))
+                // Square center bore lineart (方孔)
+                drawRect(color = TraditionalInkBlack, topLeft = Offset(center.x - 5f, center.y - 5f), size = Size(10f, 10f))
             } else {
-                drawCircle(color = darkRim, radius = 4.5f, center = center)
+                // Round center bore variant (圆孔)
+                drawCircle(color = TraditionalInkBlack, radius = 5f, center = center)
             }
         }
 
         DifferenceType.SPLASH_FISH -> {
-            val fishRed = Color(0xFFD9381E)
-            val splashColor = Color(0xFF0077B6)
+            // Red Vermillion Carp (朱砂锦鲤)
+            val fishRed = TraditionalVermillion
             val body = Path().apply {
                 moveTo(center.x - 14f, center.y + 14f)
                 quadraticTo(center.x + 4f, center.y - 12f, center.x + 14f, center.y - 6f)
@@ -631,15 +685,21 @@ private fun DrawScope.drawDifferenceItem(
             }
             drawPath(color = fishRed, path = body)
 
+            // Carp ink fins
+            drawLine(TraditionalInkBlack, Offset(center.x + 8f, center.y - 3f), Offset(center.x + 16f, center.y - 14f), strokeWidth = 1.5f)
+
             if (!showModifiedState) {
-                drawArc(color = splashColor, startAngle = 30f, sweepAngle = 120f, useCenter = false, topLeft = Offset(center.x - 16f, center.y + 8f), size = Size(32f, 12f), style = Stroke(width = 2f, cap = StrokeCap.Round))
+                // Beautiful water dynamic ripples (水花跃动)
+                drawArc(color = TraditionalIndigo, startAngle = 30f, sweepAngle = 120f, useCenter = false, topLeft = Offset(center.x - 16f, center.y + 8f), size = Size(32f, 12f), style = Stroke(width = 2f, cap = StrokeCap.Round))
             } else {
-                drawLine(color = splashColor, start = Offset(center.x - 16f, center.y + 12f), end = Offset(center.x + 16f, center.y + 12f), strokeWidth = 1.5f)
+                // Still water surface lines
+                drawLine(color = TraditionalIndigo, start = Offset(center.x - 14f, center.y + 12f), end = Offset(center.x + 14f, center.y + 12f), strokeWidth = 1.5f)
             }
         }
 
         DifferenceType.CLOUDS -> {
-            val cloudOutline = if (!showModifiedState) Color(0xFFE9C46A) else Color(0xFF4A4E69)
+            // Traditional Double-hook cloud outline (祥云纹双钩)
+            val cloudOutline = if (!showModifiedState) TraditionalGold else TraditionalInkBlack
             val cloudPath = Path().apply {
                 moveTo(center.x - 20f, center.y + 4f)
                 quadraticTo(center.x - 10f, center.y - 12f, center.x, center.y - 2f)
@@ -648,22 +708,27 @@ private fun DrawScope.drawDifferenceItem(
                 quadraticTo(center.x - 14f, center.y + 14f, center.x - 20f, center.y + 4f)
                 close()
             }
-            drawPath(color = if (!showModifiedState) Color.White.copy(alpha = 0.85f) else Color(0xFFDFE2DB).copy(alpha = 0.6f), path = cloudPath)
+            drawPath(color = if (!showModifiedState) TraditionalWhite.copy(alpha = 0.95f) else TraditionalWhite.copy(alpha = 0.6f), path = cloudPath)
             drawPath(color = cloudOutline, path = cloudPath, style = Stroke(width = 2f))
         }
 
         DifferenceType.TREE_BRANCH -> {
-            drawLine(Color(0xFF4A3728), Offset(center.x - 20f, center.y - 12f), Offset(center.x + 14f, center.y + 10f), strokeWidth = 3f, cap = StrokeCap.Round)
+            // Brush-textured Pine/Willow branch (古松虬枝)
+            drawLine(TraditionalOchre, Offset(center.x - 20f, center.y - 12f), Offset(center.x + 14f, center.y + 10f), strokeWidth = 3.5f, cap = StrokeCap.Round)
             if (!showModifiedState) {
-                drawCircle(Color(0xFF4F772D), radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
-                drawCircle(Color(0xFF4F772D), radius = 6f, center = Offset(center.x + 4f, center.y + 6f))
+                // Rich pine needle clusters in Jade green (绿松针)
+                drawCircle(TraditionalJade, radius = 6f, center = Offset(center.x - 8f, center.y - 2f))
+                drawCircle(TraditionalJade, radius = 6f, center = Offset(center.x + 4f, center.y + 6f))
+                drawCircle(TraditionalInkBlack, radius = 2.5f, center = Offset(center.x - 8f, center.y - 2f))
             } else {
-                drawCircle(Color(0xFF4F772D), radius = 4f, center = Offset(center.x + 4f, center.y + 6f))
+                // Bare twigs layout
+                drawCircle(TraditionalJade, radius = 4f, center = Offset(center.x + 4f, center.y + 6f))
             }
         }
 
         DifferenceType.PAGODA -> {
-            val silhouette = Color(0xFF2B2D42)
+            // Distant mountain pagoda tower (远山佛塔)
+            val silhouette = TraditionalInkBlack
             val baseRect1 = Path().apply {
                 moveTo(center.x - 15f, center.y + 12f)
                 lineTo(center.x + 15f, center.y + 12f)
@@ -674,26 +739,30 @@ private fun DrawScope.drawDifferenceItem(
             drawPath(color = silhouette, path = baseRect1)
 
             if (!showModifiedState) {
-                drawLine(Color(0xFFE9C46A), Offset(center.x, center.y + 2f), Offset(center.x, center.y - 16f), strokeWidth = 2.5f, cap = StrokeCap.Round)
+                // Golden top tower spire (鎏金水瓶顶)
+                drawLine(TraditionalGold, Offset(center.x, center.y + 2f), Offset(center.x, center.y - 16f), strokeWidth = 3f, cap = StrokeCap.Round)
             } else {
-                drawLine(silhouette, Offset(center.x, center.y + 2f), Offset(center.x, center.y - 8f), strokeWidth = 2.5f, cap = StrokeCap.Round)
+                // Short stone spire (常石顶)
+                drawLine(silhouette, Offset(center.x, center.y + 2f), Offset(center.x, center.y - 8f), strokeWidth = 3f, cap = StrokeCap.Round)
             }
         }
 
         DifferenceType.INCENSE_BURNER -> {
-            val burnerCol = Color(0xFF9B7E46)
-            val outlineCol = Color(0xFF422F13)
+            // Antique Bronze incense burner (宣德炉香)
+            val burnerCol = TraditionalOchre
+            val outlineCol = TraditionalInkBlack
             drawLine(outlineCol, Offset(center.x - 10f, center.y), Offset(center.x - 12f, center.y + 14f), 3.5f)
             drawLine(outlineCol, Offset(center.x + 10f, center.y), Offset(center.x + 12f, center.y + 14f), 3.5f)
             drawCircle(color = burnerCol, radius = 14f, center = center)
             drawCircle(color = outlineCol, radius = 14f, center = center, style = Stroke(width = 1.8f))
 
             if (!showModifiedState) {
+                // Soft elegant trailing coils of smoke (香炉袅袅轻烟)
                 val smokePath = Path().apply {
                     moveTo(center.x, center.y - 8f)
                     cubicTo(center.x - 6f, center.y - 18f, center.x + 6f, center.y - 24f, center.x, center.y - 36f)
                 }
-                drawPath(path = smokePath, color = Color(0xBBCAE9FF), style = Stroke(width = 1.8f, cap = StrokeCap.Round))
+                drawPath(path = smokePath, color = TraditionalWhite.copy(alpha = 0.6f), style = Stroke(width = 2.2f, cap = StrokeCap.Round))
             }
         }
     }
@@ -706,9 +775,9 @@ private fun drawSolvedStamp(
     offset: Offset,
     drawScope: DrawScope
 ) {
-    // Elegant red brush ring showing discovered coordinates
+    // Elegant mineral pigment seal stamp ring showing discovered coordinates (朱砂御印)
     drawScope.drawCircle(
-        color = Color(0xFFC1121F), // Chinese seal red
+        color = TraditionalVermillion,
         radius = 32f,
         center = offset,
         style = Stroke(
@@ -717,9 +786,9 @@ private fun drawSolvedStamp(
         )
     )
 
-    // Vermillion central cross mark representing historical auditing
+    // Vermillion central cross mark representing historic court verification
     drawScope.drawCircle(
-        color = Color(0x27C1121F),
+        color = TraditionalVermillion.copy(alpha = 0.15f),
         radius = 29f,
         center = offset
     )
