@@ -136,10 +136,27 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun selectLevel(levelId: Int) {
         val lvl = LevelDefinitions.levels.firstOrNull { it.id == levelId } ?: LevelDefinitions.levels[0]
         _activeLevel.value = randomizeLevel(lvl)
-        _discoveredIds.value = emptySet()
         _showCompletionDialog.value = false
         _timerSeconds.value = 0
         navigateTo(Screen.GamePlay)
+
+        viewModelScope.launch {
+            val progressVal = repository.getProgressForLevel(levelId).first()
+            if (progressVal != null && progressVal.completed) {
+                // Keep the differences marked as discovered/solved so they can compare pictures
+                _discoveredIds.value = lvl.differences.map { it.id }.toSet()
+                stopTimer() // Don't tick up since it is already completed
+                if (progressVal.bestTimeSeconds > 0) {
+                    _timerSeconds.value = progressVal.bestTimeSeconds
+                }
+            } else {
+                _discoveredIds.value = emptySet()
+            }
+        }
+    }
+
+    fun dismissCompletionDialog() {
+        _showCompletionDialog.value = false
     }
 
     private fun startTimer() {
@@ -166,6 +183,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         val currentLevelData = _activeLevel.value
         val alreadyFound = _discoveredIds.value
+
+        if (alreadyFound.size >= currentLevelData.differences.size) {
+            triggerStatus("此画卷已完美破解，爱卿眼力惊人！")
+            return
+        }
 
         // Check if tap fell inside of any of the 4 difference points tolerance radius
         val tappedDiff = currentLevelData.differences.firstOrNull { diff ->

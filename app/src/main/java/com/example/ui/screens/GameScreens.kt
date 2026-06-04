@@ -711,7 +711,7 @@ fun GamePlayScreen(
             level = level,
             solveTime = timerSeconds,
             onNext = { viewModel.nextLevel() },
-            onDismiss = { onBack() }
+            onDismiss = { viewModel.dismissCompletionDialog() }
         )
     }
 }
@@ -827,29 +827,44 @@ fun ImperialDecreeDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            shape = RoundedCornerShape(20.dp),
-                            border = BorderStroke(1.dp, CalligraphyInk),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = CalligraphyInk),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(text = "返回关卡")
-                        }
-
                         Button(
                             onClick = onNext,
-                            shape = RoundedCornerShape(20.dp),
+                            shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = ImperialRed),
                             modifier = Modifier
-                                .weight(1.2f)
-                                .border(1.dp, PalaceGold, RoundedCornerShape(20.dp))
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .border(1.5.dp, PalaceGold, RoundedCornerShape(24.dp))
                         ) {
-                            Text(text = "启程下一关", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "启程下一关",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                letterSpacing = 1.sp
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(1.2.dp, CalligraphyInk.copy(alpha = 0.6f)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = CalligraphyInk),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                        ) {
+                            Text(
+                                text = "返回关卡",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 1.sp
+                            )
                         }
                     }
                 }

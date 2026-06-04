@@ -78,11 +78,39 @@ fun SpotTheDifferenceCanvas(
             }
         }
 
+        val tintColor = remember(level.id) {
+            // High-fidelity mineral pigment filters to ensure every level's scroll look is unique:
+            when (level.id) {
+                1 -> Color.Transparent // Standard Golden inkwash
+                2 -> Color(0xFF0F2C1E).copy(alpha = 0.08f) // Pale green emerald tint
+                3 -> Color(0xFF0B132B).copy(alpha = 0.15f) // Deep sapphire midnight tint
+                4 -> Color(0xFF5A3E2B).copy(alpha = 0.05f) // Warm tea brown tint
+                5 -> Color(0xFF800020).copy(alpha = 0.05f) // Burgundy imperial silk tint
+                6 -> Color(0xFF1E352F).copy(alpha = 0.10f) // Misty forest bamboo green tint
+                7 -> Color(0xFFC84B31).copy(alpha = 0.06f) // Cinnabar Red sunset tint
+                8 -> Color(0xFF2D4263).copy(alpha = 0.08f) // Deep blue well water tint
+                9 -> Color(0xFFD4AF37).copy(alpha = 0.08f) // Liquid gold wash tint
+                10 -> Color(0xFF6E5743).copy(alpha = 0.10f) // Soft earth clay ochre tint
+                11 -> Color(0xFF43655A).copy(alpha = 0.08f) // Pale teal lake mist tint
+                12 -> Color(0xFF1C2D42).copy(alpha = 0.14f) // Sunrise purple indigo tint
+                13 -> Color(0xFF9E2A2B).copy(alpha = 0.10f) // Court ceremonial crimson tint
+                14 -> Color(0xFF704F38).copy(alpha = 0.08f) // Antique bronze dust tint
+                15 -> Color(0xFF212529).copy(alpha = 0.18f) // Dark starry sky charcoal tint
+                16 -> Color(0xFFF0E5D8).copy(alpha = 0.05f) // Classic scroll age parchment tint
+                17 -> Color(0xFFB35446).copy(alpha = 0.08f) // Red lacquer courtyard tint
+                18 -> Color(0xFF4E6C50).copy(alpha = 0.08f) // Spring peach willow green tint
+                19 -> Color(0xFF533E2D).copy(alpha = 0.10f) // Rosewood lattice study room tint
+                20 -> Color(0xFFFFB347).copy(alpha = 0.12f) // Rising sun aura golden tint
+                else -> Color.Transparent
+            }
+        }
+
         Image(
             painter = painterResource(id = bgImageRes),
             contentDescription = "Ancient Chinese scroll painting background",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+            contentScale = ContentScale.Crop,
+            colorFilter = if (tintColor != Color.Transparent) ColorFilter.tint(tintColor, BlendMode.Darken) else null
         )
 
         Canvas(
@@ -102,9 +130,6 @@ fun SpotTheDifferenceCanvas(
 
             // 1.5. Draw level-specific main scenic backdrop corresponding to the idiom
             drawIdiomMainScene(level.id, size, this)
-
-            // 2. Draw vertical Chinese scroll badge for level context
-            drawScrollBadge(level, size, isModified)
 
             // 3. Draw each difference interactive item
             level.differences.forEach { diff ->
@@ -456,20 +481,7 @@ private fun DrawScope.drawDifferenceItem(
     isSolved: Boolean,
     drawScope: DrawScope
 ) {
-    val showModifiedState = isModifiedImage && !isSolved
-
-    // Render a subtle wet-ink bleeding wash background (晕染效果)
-    // This creates an organic shadow underneath each element so it blends perfectly into the antique scroll 
-    drawCircle(
-        color = TraditionalInkHalo,
-        radius = 32f,
-        center = center
-    )
-    drawCircle(
-        color = TraditionalInkHalo.copy(alpha = TraditionalInkHalo.alpha * 0.4f),
-        radius = 42f,
-        center = center
-    )
+    val showModifiedState = isModifiedImage
 
     when (type) {
         DifferenceType.QING_OFFICIAL_HAT -> {
