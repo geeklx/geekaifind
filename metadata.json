@@ -1,0 +1,6 @@
+{
+  "name": "GeekAIFind",
+  "description": "清朝背景大家来找茬，挑战成语关卡！上下两个图找不同，个性化中国风界面与优雅触控体验。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
